@@ -32,13 +32,9 @@ public class UserService implements UserDetailsService {
         try {
             String userName = SecurityContextHolder.getContext().getAuthentication().getName();
 
-            System.out.println("======================================");
-            System.out.println("USUÁRIO LIDO PELO SPRING: " + userName);
-            System.out.println("======================================");
-
             return repository.findByEmail(userName);
-        } catch (Exception e) {
-            throw new UsernameNotFoundException("Invalid username or password");
+        } catch (UsernameNotFoundException e) {
+            throw new UsernameNotFoundException("Invalid username or password " + e.getMessage());
         }
     }
 
