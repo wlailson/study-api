@@ -20,22 +20,34 @@ public class UserService implements UserDetailsService {
     }
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+    public UserDetails loadUserByUsername(String username)
+            throws UsernameNotFoundException {
+
         User user = repository.findByEmail(username);
+
         if (user == null) {
-            throw new UsernameNotFoundException(username);
+            throw new UsernameNotFoundException(
+                    "Invalid username or password"
+            );
         }
+
         return user;
     }
 
     protected User authenticated() {
-        try {
-            String userName = SecurityContextHolder.getContext().getAuthentication().getName();
 
-            return repository.findByEmail(userName);
-        } catch (UsernameNotFoundException e) {
-            throw new UsernameNotFoundException("Invalid username or password " + e.getMessage());
+        String username = SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getName();
+
+        User user = repository.findByEmail(username);
+
+        if (user == null) {
+            throw new UsernameNotFoundException(username);
         }
+
+        return user;
     }
 
     @Transactional(readOnly = true)
