@@ -11,9 +11,7 @@ CREATE TABLE tb_user
     email      VARCHAR(100) NOT NULL UNIQUE,
     password   VARCHAR(255) NOT NULL,
     phone      VARCHAR(12)  NOT NULL,
-    birth_date DATE         NOT NULL,
-    role_id    BIGINT       NOT NULL,
-    CONSTRAINT fk_user_role FOREIGN KEY (role_id) REFERENCES tb_role (id)
+    birth_date DATE         NOT NULL
 );
 
 CREATE TABLE tb_user_role
