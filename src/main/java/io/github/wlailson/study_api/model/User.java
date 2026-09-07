@@ -5,9 +5,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDate;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 @Entity
 @Table(name = "tb_user")
@@ -28,6 +26,15 @@ public class User implements UserDetails {
 
     private String password;
 
+    @OneToMany(mappedBy = "user")
+    private List<Goal> goals = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user")
+    private Set<Subject> subjects = new HashSet<>();
+
+    @OneToMany(mappedBy = "user")
+    private List<StudySession> sessions = new ArrayList<>();
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "tb_user_role",
             joinColumns = @JoinColumn(name = "user_id"),
@@ -45,6 +52,7 @@ public class User implements UserDetails {
         this.birthDate = birthDate;
         this.password = password;
     }
+
 
     public Long getId() {
         return id;
@@ -126,5 +134,17 @@ public class User implements UserDetails {
 
     public Set<Role> getRoles() {
         return roles;
+    }
+
+    public List<Goal> getGoals() {
+        return goals;
+    }
+
+    public Set<Subject> getSubjects() {
+        return subjects;
+    }
+
+    public List<StudySession> getSessions() {
+        return sessions;
     }
 }
