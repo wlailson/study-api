@@ -23,9 +23,9 @@ public class StudySession {
     @Enumerated(EnumType.STRING)
     private SessionStatus status;
 
-    private Instant createdDate;
+    private Instant startTime;
 
-    private Instant finishedDate;
+    private Instant endTime;
 
     @ManyToOne
     @JoinColumn(name = "user_id")
@@ -36,16 +36,17 @@ public class StudySession {
     private Subject subject;
 
     @OneToMany(mappedBy = "session")
+    @OrderBy("date ASC")
     private Set<Revision> revisions = new HashSet<>();
 
-    public StudySession(Long id, String topic, Long durationInMinutes, Long breakTimeInMinutes, SessionStatus status, Instant createdDate, Instant finishedDate, User user, Subject subject) {
+    public StudySession(Long id, String topic, Long durationInMinutes, Long breakTimeInMinutes, SessionStatus status, Instant startTime, Instant endTime, User user, Subject subject) {
         this.id = id;
         this.topic = topic;
         this.durationInMinutes = durationInMinutes;
         this.breakTimeInMinutes = breakTimeInMinutes;
         this.status = status;
-        this.createdDate = createdDate;
-        this.finishedDate = finishedDate;
+        this.startTime = startTime;
+        this.endTime = endTime;
         this.user = user;
         this.subject = subject;
     }
@@ -93,20 +94,20 @@ public class StudySession {
         this.status = status;
     }
 
-    public Instant getCreatedDate() {
-        return createdDate;
+    public Instant getStartTime() {
+        return startTime;
     }
 
-    public void setCreatedDate(Instant createdDate) {
-        this.createdDate = createdDate;
+    public void setStartTime(Instant startTime) {
+        this.startTime = startTime;
     }
 
-    public Instant getFinishedDate() {
-        return finishedDate;
+    public Instant getEndTime() {
+        return endTime;
     }
 
-    public void setFinishedDate(Instant finishedDate) {
-        this.finishedDate = finishedDate;
+    public void setEndTime(Instant endTime) {
+        this.endTime = endTime;
     }
 
     public User getUser() {

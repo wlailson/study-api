@@ -1,8 +1,8 @@
 package io.github.wlailson.study_api.service.exceptions;
 
-public class ForbiddenException extends RuntimeException {
+public class ConflictException extends RuntimeException {
 
-    public ForbiddenException(String message) {
+    public ConflictException(String message) {
         super(message);
     }
 }
