@@ -46,7 +46,7 @@ public class ResourceServerConfig {
     public SecurityFilterChain rsSecurityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(csrf -> csrf.disable());
         http.authorizeHttpRequests(authorize -> {
-            authorize.requestMatchers(HttpMethod.GET).permitAll();
+            //authorize.requestMatchers(HttpMethod.GET).permitAll();
             authorize.requestMatchers("/oauth2/**").permitAll();
             authorize.requestMatchers(
                     "/v3/api-docs/**",

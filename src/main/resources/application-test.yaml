@@ -20,3 +20,9 @@ spring:
     locations:
       - classpath:db/migration
       - classpath:db/testdata
+
+logging:
+  level:
+    org:
+      springframework:
+        security: debug
