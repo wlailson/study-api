@@ -1,4 +1,7 @@
 package io.github.wlailson.study_api.repository;
 
-public interface RevisionRepository {
+import io.github.wlailson.study_api.model.Revision;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface RevisionRepository extends JpaRepository<Revision, Long> {
 }

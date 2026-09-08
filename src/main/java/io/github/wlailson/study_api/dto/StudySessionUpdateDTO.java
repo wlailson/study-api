@@ -1,4 +1,10 @@
 package io.github.wlailson.study_api.dto;
 
-public record StudySessionUpdateDTO() {
+import io.github.wlailson.study_api.model.StudySession;
+
+public record StudySessionUpdateDTO(
+        String topic,
+        Long durationInMinutes,
+        Long breakTimeInMinutes
+) {
 }

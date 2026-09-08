@@ -1,16 +1,17 @@
 package io.github.wlailson.study_api.controller;
 
 import io.github.wlailson.study_api.dto.GoalDTO;
+import io.github.wlailson.study_api.service.GoalItemService;
 import io.github.wlailson.study_api.service.GoalService;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/goals")
-public class GoalController {
+@RequestMapping("/goal/itens")
+public class GoalItemController {
 
-    private final GoalService service;
+    private final GoalItemService service;
 
-    public GoalController(GoalService service) {
+    public GoalItemController(GoalItemService service) {
         this.service = service;
     }
 

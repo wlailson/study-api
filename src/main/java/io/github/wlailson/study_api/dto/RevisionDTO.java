@@ -4,9 +4,9 @@ import io.github.wlailson.study_api.model.Revision;
 
 import java.time.LocalDate;
 
-public record RevisionDTOCreate(Long id, LocalDate date) {
+public record RevisionDTO(Long id, LocalDate date) {
 
-    public RevisionDTOCreate(Revision entity) {
+    public RevisionDTO(Revision entity) {
         this(entity.getId(), entity.getDate());
     }
 }
