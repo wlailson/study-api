@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 public interface StudySessionRepository extends JpaRepository<StudySession, Long> {
@@ -28,4 +29,17 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
     Page<StudySessionMinDTO> searchSessions(
             Pageable pageable,
             @Param("userId") Long userId);
+
+    @Query(nativeQuery = true, value = """
+            SELECT COALESCE( SUM(duration_in_minutes), 0)
+            FROM tb_study_session
+            WHERE end_time >= :startDate
+            AND end_time < :endDate
+            AND status = 'COMPLETED'
+            AND user_id = :userId
+            """)
+    Long studied(@Param("userId") Long userId,
+                 @Param("startDate") LocalDateTime startDate,
+                 @Param("endDate") LocalDateTime endDate
+    );
 }

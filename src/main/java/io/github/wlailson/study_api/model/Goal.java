@@ -19,7 +19,7 @@ public class Goal {
     private LocalDate startDate;
     private LocalDate endDate;
 
-    @OneToMany(mappedBy = "goal")
+    @OneToMany(mappedBy = "goal", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<GoalItem> goalItems = new ArrayList<>();
 
     @ManyToOne
