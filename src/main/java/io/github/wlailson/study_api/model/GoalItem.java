@@ -30,6 +30,10 @@ public class GoalItem {
     public GoalItem() {
     }
 
+    public Subject getSubject() {
+        return subject;
+    }
+
     public Long getId() {
         return id;
     }
@@ -53,10 +57,6 @@ public class GoalItem {
 
     public void setGoal(Goal goal) {
         this.goal = goal;
-    }
-
-    public Subject getSubject() {
-        return subject;
     }
 
     public void setSubject(Subject subject) {
