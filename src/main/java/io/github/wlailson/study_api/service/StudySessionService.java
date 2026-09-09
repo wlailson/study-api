@@ -97,7 +97,6 @@ public class StudySessionService {
         session.setTopic(dto.topic());
         session.setDurationInMinutes(dto.durationInMinutes());
         session.setBreakTimeInMinutes(dto.breakTimeInMinutes());
-        session.setSubject(findSubjectById(sessionId));
 
         return new StudySessionDTO(session);
     }

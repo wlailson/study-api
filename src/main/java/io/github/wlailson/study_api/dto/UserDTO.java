@@ -6,7 +6,7 @@ import io.github.wlailson.study_api.model.User;
 import java.time.LocalDate;
 import java.util.List;
 
-public record UserDTO(Long id, String name, String email, String phone, LocalDate birthdate, List<String> roles) {
+public record UserDTO(Long id, String name, String email, String phone, LocalDate birthDate, List<String> roles) {
 
     public UserDTO(User entity) {
         this(
