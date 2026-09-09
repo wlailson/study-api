@@ -26,35 +26,63 @@ public class GoalItemService {
     private final SubjectRepository subjectRepository;
     private final GoalRepository goalRepository;
 
-    public GoalItemService(GoalItemRepository repository, AuthenticatedUser authenticatedUser, SubjectService subjectRepository, SubjectRepository subjectRepository1, GoalRepository goalRepository) {
+    public GoalItemService(GoalItemRepository repository, AuthenticatedUser authenticatedUser, SubjectRepository subjectRepository, GoalRepository goalRepository) {
         this.repository = repository;
         this.authenticatedUser = authenticatedUser;
-        this.subjectRepository = subjectRepository1;
+        this.subjectRepository = subjectRepository;
         this.goalRepository = goalRepository;
     }
 
     @Transactional(readOnly = true)
     public GoalItemDTO findById(Long goalId, Long id) {
+
         GoalItem item = loadEntityById(goalId, id);
-        authenticatedUser.validateOwnership(item.getGoal().getId());
+
+        authenticatedUser.validateOwnership(
+                item.getGoal().getUser().getId()
+        );
+
         return new GoalItemDTO(item);
     }
 
+
     @Transactional(readOnly = true)
-    public Page<GoalItemMinDTO> findAll(Long goalId, Pageable pageable) {
-        Page<GoalItemMinDTO> goalItems = repository.searchAllbyGoalId(goalId, pageable);
-        return goalItems;
+    public Page<GoalItemMinDTO> findAll(
+            Long goalId,
+            Pageable pageable) {
+
+        Goal goal = loadGoal(goalId);
+
+        authenticatedUser.validateOwnership(
+                goal.getUser().getId()
+        );
+
+        return repository.searchAllbyGoalId(
+                goalId,
+                pageable
+        );
     }
 
     @Transactional
-    public void addGoalItems(Long goalId, List<GoalItemCreateDTO> dto) {
+    public void addGoalItems(
+            Long goalId,
+            List<GoalItemCreateDTO> dto) {
+
         Goal goal = loadGoal(goalId);
+
         Long userId = goal.getUser().getId();
-        List<GoalItem> goalItems = dto.stream().map(goalItemDTO -> {
+
+        authenticatedUser.validateOwnership(userId);
+
+        List<GoalItem> goalItems = dto.stream()
+                .map(goalItemDTO -> {
+
                     GoalItem item = new GoalItem();
 
                     item.setGoal(goal);
-                    item.setTargetInMinutes(goalItemDTO.targetInMinutes());
+                    item.setTargetInMinutes(
+                            goalItemDTO.targetInMinutes()
+                    );
 
                     Subject subject = loadSubjectById(
                             goalItemDTO.subjectId(),
