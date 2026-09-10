@@ -62,13 +62,9 @@ As migrations responsáveis pela criação das tabelas e relacionamentos estão 
 
 [`src/main/resources/db/migration`](src/main/resources/db/migration)
 
-### Migration de criação do banco
+### [`Migration de criação do banco`](src/main/resources/db/migration/V1__create_tables.sql)
 
-[`V1__create_tables.sql`](src/main/resources/db/migration/V1__create_tables.sql)
-
-### Migration de dados iniciais
-
-[`V2__insert_test_data.sql`](src/main/resources/db/testdata/V2__insert_test_data.sql)
+### [`Migration de dados iniciais`](src/main/resources/db/testdata/V2__insert_test_data.sql)
 
 ---
 
@@ -80,7 +76,8 @@ O acesso aos endpoints protegidos requer um token de acesso válido.
 
 Para facilitar os testes da API, uma collection com as requisições pode ser encontrada em:
 
-[`docs/collection`](docs/collection.har)
+[`Collections.har`](docs/collection.har)
+[`Collections.yml`](docs/collection.yaml)
 
 A collection pode ser disponibilizada nos formatos **Insomnia v5** ou **HAR**.
 
