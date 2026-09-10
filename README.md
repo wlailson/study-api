@@ -6,9 +6,6 @@ O projeto permite o gerenciamento de usuários, matérias, sessões de estudo, r
 
 ---
 
-## Índice
-
-* [Sobre o projeto](#sobre-o-projeto)
 * [Tecnologias](#tecnologias)
 * [Modelo de dados](#modelo-de-dados)
 * [Diagrama de instâncias](#diagrama-de-instâncias)
@@ -16,7 +13,18 @@ O projeto permite o gerenciamento de usuários, matérias, sessões de estudo, r
 * [Autenticação](#autenticação)
 * [Execução com Docker](#execução-com-docker)
 * [Swagger / OpenAPI](#swagger--openapi)
-* [Testes](#testes)
+
+---
+
+## Modelo de dados
+
+![Modelo de Entidade](docs/modelo-entidade.png)
+
+---
+
+## Diagrama de instâncias
+
+![Diagrama de Instâncias](docs/diagrama-instancias.png)
 
 ---
 
@@ -35,7 +43,6 @@ Entre as principais funcionalidades estão:
 * Autenticação utilizando OAuth2.
 
 ---
-
 ## Tecnologias
 
 * Java
@@ -45,24 +52,6 @@ Entre as principais funcionalidades estão:
 * Docker
 * JUnit
 * Mockito
-* Swagger / OpenAPI
-
----
-
-## Modelo de dados
-
-O modelo de entidade apresenta a estrutura do banco de dados e os relacionamentos entre as principais entidades da aplicação.
-
-![Modelo de Entidade](docs/modelo-entidade.png)
-
----
-
-## Diagrama de instâncias
-
-O diagrama de instâncias apresenta um exemplo de dados relacionados entre as entidades do sistema.
-
-![Diagrama de Instâncias](docs/diagrama-instancias.png)
-
 ---
 
 ## Banco de dados e migrations
@@ -157,16 +146,3 @@ http://localhost:8080/swagger-ui.html
 O Swagger permite visualizar os endpoints disponíveis e realizar requisições diretamente pela interface.
 
 ---
-
-## Testes
-
-O projeto possui testes automatizados utilizando:
-
-* JUnit
-* Mockito
-
-Para executar os testes:
-
-```bash
-./mvnw test
-```
