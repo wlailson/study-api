@@ -1,0 +1,864 @@
+type: collection.insomnia.rest/5.0
+schema_version: "5.1"
+name: Study Manager
+meta:
+  id: wrk_864080b909e4498499d522d3b4662343
+  created: 1788757743793
+  modified: 1788757743793
+  description: ""
+collection:
+  - name: session
+    meta:
+      id: fld_220def7af54140ec852d1a6b37917aae
+      created: 1788757775389
+      modified: 1789018456031
+      sortKey: -1788821060316
+      description: ""
+    children:
+      - url: "{{ _.host }}/sessions/4"
+        name: Session by id
+        meta:
+          id: req_419cdf6f5e83457ea993918c0603ee4a
+          created: 1788757780011
+          modified: 1788989290977
+          isPrivate: false
+          description: ""
+          sortKey: -1788757780011
+        method: GET
+        authentication:
+          type: bearer
+          token: "{{ _.token }}"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.host }}/sessions"
+        name: Completed Sessions
+        meta:
+          id: req_a3b4788053b9487d89c02792942a4698
+          created: 1788765243344
+          modified: 1789011963878
+          isPrivate: false
+          description: ""
+          sortKey: -1788442928751
+        method: GET
+        authentication:
+          type: bearer
+          token: "{{ _.token }}"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.host }}/sessions/start"
+        name: Start session
+        meta:
+          id: req_2b118e6db7bf415291e4e67e42231118
+          created: 1788769248896
+          modified: 1788808364358
+          isPrivate: false
+          description: ""
+          sortKey: -1788285503121
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+            	"subjectId": 1
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        authentication:
+          type: bearer
+          token: "{{ _.token }}"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.host }}/sessions/current"
+        name: In progress Session
+        meta:
+          id: req_b0613628feab408aa777679e3fe9c10f
+          created: 1788773564161
+          modified: 1788774512911
+          isPrivate: false
+          description: ""
+          sortKey: -1788364215936
+        method: GET
+        authentication:
+          type: bearer
+          token: "{{ _.token }}"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.host }}/sessions/end"
+        name: End session
+        meta:
+          id: req_dab3d0b3868e4fcbaaf7180e89909050
+          created: 1788775725774
+          modified: 1788809730562
+          isPrivate: false
+          description: ""
+          sortKey: -1788206790306
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+            	"topic": "Programação avançada",
+            	"durationInMinutes": 60,
+            	"breakTimeInMinutes": 10,
+            	"revisions": [
+            		{"date":"2026-09-08"},
+            		{"date":"2026-09-16"},
+            		{"date":"2026-09-20"}
+            	]
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        authentication:
+          type: bearer
+          token: "{{ _.token }}"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.host }}/sessions/4"
+        name: Update session
+        meta:
+          id: req_2723ab27c2c045cf972038e924c21cc4
+          created: 1788814501568
+          modified: 1788816850409
+          isPrivate: false
+          description: ""
+          sortKey: -1788167433898.5
+        method: PUT
+        body:
+          mimeType: application/json
+          text: |-
+            {
+            	"topic": "Programação avançada",
+            	"durationInMinutes": 120,
+            	"breakTimeInMinutes": 25
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        authentication:
+          type: bearer
+          token: "{{ _.token }}"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.host }}/sessions/3"
+        name: Session by id
+        meta:
+          id: req_3f901e5fd60c46a59781e820b2965e0e
+          created: 1788817623658
+          modified: 1788817683322
+          isPrivate: false
+          description: ""
+          sortKey: -1788600354381
+        method: DELETE
+        authentication:
+          type: bearer
+          token: "{{ _.token }}"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: Auth
+    meta:
+      id: fld_f666c5c1219744059cb4da826ac92570
+      created: 1788759346405
+      modified: 1789018429929
+      sortKey: -1788821060391
+      description: ""
+    children:
+      - url: "{{ _.host }}/oauth2/token"
+        name: Login
+        meta:
+          id: req_7ff16454089e4fd9b196a1646a12fe11
+          created: 1788759412980
+          modified: 1789012377844
+          isPrivate: false
+          description: ""
+          sortKey: -1788759350591
+        method: POST
+        body:
+          mimeType: application/x-www-form-urlencoded
+          params:
+            - name: username
+              value: "{{ _.username }}"
+              description: ""
+              disabled: false
+            - name: password
+              value: "{{ _.password }}"
+              description: ""
+              disabled: false
+            - name: grant_type
+              value: password
+              description: ""
+              disabled: false
+        headers:
+          - name: Content-Type
+            value: application/x-www-form-urlencoded
+        authentication:
+          type: basic
+          useISO88591: false
+          username: myclientid
+          password: myclientsecret
+          disabled: false
+        scripts:
+          afterResponse: |-
+            if (insomnia.response.code >= 200 && insomnia.response.code < 300) {
+                var json = insomnia.response.json();
+                insomnia.environment.set('token', json.access_token);
+            }
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: User
+    meta:
+      id: fld_bdca28c3509140329f76faecd45c1686
+      created: 1788759939790
+      modified: 1789018435144
+      sortKey: -1788821060341
+      description: ""
+    children:
+      - url: "{{ _.host }}/users/me"
+        name: User logged
+        meta:
+          id: req_dea2f7c5c7cd4faf92a1a1baffbff649
+          created: 1788759939790
+          modified: 1788759981271
+          isPrivate: false
+          description: ""
+          sortKey: -1788067672693
+        method: GET
+        authentication:
+          type: bearer
+          token: "{{ _.token }}"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: Revision
+    meta:
+      id: fld_31a414be72cc4a0798988bf342ffcc8b
+      created: 1788818068385
+      modified: 1789018480670
+      sortKey: -1788821042132.5
+      description: ""
+    children:
+      - url: "{{ _.host }}/revisions/1"
+        name: Revision
+        meta:
+          id: req_cb28b92177bc4689ac9958fbcc17ca31
+          created: 1788818074645
+          modified: 1788980558333
+          isPrivate: false
+          description: ""
+          sortKey: -1788818074645
+        method: GET
+        authentication:
+          type: bearer
+          token: "{{ _.token }}"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.host }}/revisions"
+        name: Revisions
+        meta:
+          id: req_64f6c2e3037b41f1acea67fc05604f89
+          created: 1788929556546
+          modified: 1788929562152
+          isPrivate: false
+          description: ""
+          sortKey: -1788788712618
+        method: GET
+        authentication:
+          type: bearer
+          token: "{{ _.token }}"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.host }}/revisions/1"
+        name: Revisions
+        meta:
+          id: req_f804fc362efc4c5aa55f9535c3c94283
+          created: 1788929720966
+          modified: 1788929785531
+          isPrivate: false
+          description: ""
+          sortKey: -1788774031604.5
+        method: PUT
+        body:
+          mimeType: application/json
+          text: |-
+            {
+            	"date": "2026-08-11"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        authentication:
+          type: bearer
+          token: "{{ _.token }}"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.host }}/revisions/1"
+        name: Revisions
+        meta:
+          id: req_05d580858c95495e8d084085ae43a9d0
+          created: 1788929797592
+          modified: 1788929810635
+          isPrivate: false
+          description: ""
+          sortKey: -1788766691097.75
+        method: DELETE
+        authentication:
+          type: bearer
+          token: "{{ _.token }}"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: Goal
+    meta:
+      id: fld_aa24a8d952ab459681ea4c2bbb366039
+      created: 1788821023974
+      modified: 1788821023974
+      sortKey: -1788821023974
+      description: ""
+    children:
+      - url: "{{ _.host }}/goals/99"
+        name: Goal By ID
+        meta:
+          id: req_75a30abf06b1415b841da674208e65ac
+          created: 1788837106259
+          modified: 1788980587241
+          isPrivate: false
+          description: ""
+          sortKey: -1788821043585
+        method: GET
+        authentication:
+          type: bearer
+          token: "{{ _.token }}"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.host }}/goals"
+        name: Goals
+        meta:
+          id: req_1aeb9d7f3cfe4127aea4f317c1ae367f
+          created: 1788904865741
+          modified: 1788905822413
+          isPrivate: false
+          description: ""
+          sortKey: -1788821043485
+        method: GET
+        authentication:
+          type: bearer
+          token: "{{ _.token }}"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.host }}/goals/1"
+        name: Goal By ID
+        meta:
+          id: req_4a713a4cd730421189961057d1736940
+          created: 1788905693621
+          modified: 1788916744900
+          isPrivate: false
+          description: ""
+          sortKey: -1788821043435
+        method: DELETE
+        authentication:
+          type: bearer
+          token: "{{ _.token }}"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.host }}/goals"
+        name: Goal By ID
+        meta:
+          id: req_4de2634a299244be8f6a6c158660cd31
+          created: 1788906033490
+          modified: 1788916822912
+          isPrivate: false
+          description: ""
+          sortKey: -1788821043460
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+            	"title": "Java programação",
+            	"startDate": "2026-11-02",
+            	"endDate": "2026-11-09",
+            	"items": [
+            		{
+            			"targetInMinutes": 300,
+            			"subjectId": 1
+            		},
+            		{
+            			"targetInMinutes": 200,
+            			"subjectId": 2
+            		},
+            			{
+            			"targetInMinutes": 150,
+            			"subjectId": 3
+            		},
+            				{
+            			"targetInMinutes": 500,
+            			"subjectId": 4
+            		},
+            				{
+            			"targetInMinutes": 800,
+            			"subjectId": 5
+            		},
+            		{
+            			"targetInMinutes": 100,
+            			"subjectId": 6
+            		}
+            	]
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        authentication:
+          type: bearer
+          token: "{{ _.token }}"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.host }}/goals/2"
+        name: Goal by ID
+        meta:
+          id: req_c6631d323aa949b4a91ad4cb10f95f0b
+          created: 1788907284801
+          modified: 1788916825338
+          isPrivate: false
+          description: ""
+          sortKey: -1788821043447.5
+        method: PUT
+        body:
+          mimeType: application/json
+          text: |-
+            {
+            	"title": "Java programação",
+            	"startDate": "2026-11-02",
+            	"endDate": "2026-11-09"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        authentication:
+          type: bearer
+          token: "{{ _.token }}"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - name: GoalItem
+        meta:
+          id: fld_685f3c144d0b4d2abbfa10da85941bf8
+          created: 1788821043285
+          modified: 1788821043285
+          sortKey: -1788821043285
+          description: ""
+        children:
+          - url: "{{ _.host }}/1/itens/1"
+            name: GoalItem By ID
+            meta:
+              id: req_d532e864d0e349bb8355005092272cf6
+              created: 1788916648275
+              modified: 1788921709585
+              isPrivate: false
+              description: ""
+              sortKey: -1788916648275
+            method: GET
+            authentication:
+              type: bearer
+              token: "{{ _.token }}"
+            settings:
+              renderRequestBody: true
+              encodeUrl: true
+              followRedirects: global
+              cookies:
+                send: true
+                store: true
+              rebuildPath: true
+          - url: "{{ _.host }}/1/itens"
+            name: GoalItems
+            meta:
+              id: req_7e55c81d15d44ba498b824ee23bf5eb0
+              created: 1788916706972
+              modified: 1788921971679
+              isPrivate: false
+              description: ""
+              sortKey: -1788901850474.5
+            method: GET
+            authentication:
+              type: bearer
+              token: "{{ _.token }}"
+            settings:
+              renderRequestBody: true
+              encodeUrl: true
+              followRedirects: global
+              cookies:
+                send: true
+                store: true
+              rebuildPath: true
+          - url: "{{ _.host }}/1/itens"
+            name: add GoalItems
+            meta:
+              id: req_a7af038d648245fd808de1febbe4886a
+              created: 1788916798524
+              modified: 1788926529639
+              isPrivate: false
+              description: ""
+              sortKey: -1788894451574.25
+            method: POST
+            body:
+              mimeType: application/json
+              text: |-
+                [
+                	{
+                		"targetInMinutes": 329,
+                		"subjectId": 1
+                	},
+                		{
+                		"targetInMinutes": 429,
+                		"subjectId": 2
+                	},
+                		{
+                		"targetInMinutes": 529,
+                		"subjectId": 3
+                	},
+                		{
+                		"targetInMinutes": 629,
+                		"subjectId": 3
+                	},
+                		{
+                		"targetInMinutes": 629,
+                		"subjectId": 2
+                	},
+                		{
+                		"targetInMinutes": 729,
+                		"subjectId": 1
+                	}
+                ]
+            headers:
+              - name: Content-Type
+                value: application/json
+            authentication:
+              type: bearer
+              token: "{{ _.token }}"
+            settings:
+              renderRequestBody: true
+              encodeUrl: true
+              followRedirects: global
+              cookies:
+                send: true
+                store: true
+              rebuildPath: true
+          - url: "{{ _.host }}/1/itens/1"
+            name: GoalItems
+            meta:
+              id: req_8670e5f3ad2847fcab3bed2fed9cb3dc
+              created: 1788917100022
+              modified: 1788924323688
+              isPrivate: false
+              description: ""
+              sortKey: -1788890752124.125
+            method: DELETE
+            authentication:
+              type: bearer
+              token: "{{ _.token }}"
+              prefix: ""
+            settings:
+              renderRequestBody: true
+              encodeUrl: true
+              followRedirects: global
+              cookies:
+                send: true
+                store: true
+              rebuildPath: true
+          - url: "{{ _.host }}/1/itens/1"
+            name: add GoalItems
+            meta:
+              id: req_88db3c9422174ecebe948835ea57aa07
+              created: 1788917229555
+              modified: 1788925784636
+              isPrivate: false
+              description: ""
+              sortKey: -1788892601849.1875
+            method: PUT
+            body:
+              mimeType: application/json
+              text: |-
+                {
+                	"targetInMinutes": 526,
+                	"subjectId": 1
+                }
+            headers:
+              - name: Content-Type
+                value: application/json
+            authentication:
+              type: bearer
+              token: "{{ _.token }}"
+            settings:
+              renderRequestBody: true
+              encodeUrl: true
+              followRedirects: global
+              cookies:
+                send: true
+                store: true
+              rebuildPath: true
+  - name: Subject
+    meta:
+      id: fld_23d408f0a10f4ec28492199adcc8327c
+      created: 1788821060291
+      modified: 1788821060291
+      sortKey: -1788821060291
+      description: ""
+    children:
+      - url: "{{ _.host }}/subjects/1"
+        name: By id
+        meta:
+          id: req_7b557c07f3ff4f68af163e84a6c24a0a
+          created: 1788887052674
+          modified: 1788888501497
+          isPrivate: false
+          description: ""
+          sortKey: -1788887052674
+        method: GET
+        authentication:
+          type: bearer
+          token: "{{ _.token }}"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.host }}/subjects/11"
+        name: By id
+        meta:
+          id: req_831ce515546f4aedb624a0870e7ddfa4
+          created: 1788887097672
+          modified: 1788888649801
+          isPrivate: false
+          description: ""
+          sortKey: -1788862079466.5
+        method: DELETE
+        authentication:
+          type: bearer
+          token: "{{ _.token }}"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.host }}/subjects/1"
+        name: By id
+        meta:
+          id: req_c4ac48e3c0dd448cbcc9775d3f37f1ea
+          created: 1788887100815
+          modified: 1788888595429
+          isPrivate: false
+          description: ""
+          sortKey: -1788874566070.25
+        method: PUT
+        body:
+          mimeType: application/json
+          text: |-
+            {
+            	"name": "Golang"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        authentication:
+          type: bearer
+          token: "{{ _.token }}"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.host }}/subjects"
+        name: Create
+        meta:
+          id: req_4ddb7e04ac264f8a845384309dafa653
+          created: 1788887104366
+          modified: 1788888577456
+          isPrivate: false
+          description: ""
+          sortKey: -1788880809372.125
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+            	"name": "Português"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        authentication:
+          type: bearer
+          token: "{{ _.token }}"
+          prefix: ""
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.host }}/subjects"
+        name: All
+        meta:
+          id: req_b3d475d3c1224513bb5928d8e1967c4f
+          created: 1788887107221
+          modified: 1788888528883
+          isPrivate: false
+          description: ""
+          sortKey: -1788883931023.0625
+        method: GET
+        authentication:
+          type: bearer
+          token: "{{ _.token }}"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+cookieJar:
+  name: Default Jar
+  meta:
+    id: jar_7c15ec6df3a05efe23517ffc9cbe85aa52c9233d
+    created: 1788757743798
+    modified: 1789012484281
+  cookies:
+    - id: 166598e8-02d0-448c-a864-4045cda45ef3
+      key: JSESSIONID
+      value: 22B247F0B87C54DC00E32A07210A98CE
+      domain: localhost
+      path: /
+      secure: false
+      httpOnly: true
+      hostOnly: true
+environments:
+  name: Base Environment
+  meta:
+    id: env_7c15ec6df3a05efe23517ffc9cbe85aa52c9233d
+    created: 1788757743796
+    modified: 1789012484282
+    isPrivate: false
+  data:
+    host: http://localhost:8080
+    client-id: myclientid
+    client-secret: myclientsecret
+    username: maria@gmail.com
+    password: "123456"
+    token: eyJraWQiOiI1MWQxYTM5Yi01ODZmLTQxMzItOTY4MC1hZGY5ZmZmZTdhZWYiLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJteWNsaWVudGlkIiwiYXVkIjoibXljbGllbnRpZCIsIm5iZiI6MTc4OTAxMjQ4NCwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo4MDgwIiwiZXhwIjoxNzg5MDk4ODg0LCJpYXQiOjE3ODkwMTI0ODQsImp0aSI6IjFiNjAyMjRiLWM5MTItNDYwZC1hMDJiLTFmODliMTA0ODVjMyIsImF1dGhvcml0aWVzIjpbIlJPTEVfQ0xJRU5UIl0sInVzZXJuYW1lIjoibWFyaWFAZ21haWwuY29tIn0.bFvzdRt3_SBKkX2g2jTlG3a1Y8YyA9W0J3X88UFM5_AXVFe00SLEQ8Nd3P69EG8yeOLflkXwpSoXUYSlP-5HCkPtmvQBS3Ak6bc8md32X_3WaXQN7FuFs16OyWw2Xu93LUuEAq-_SrvRufBe1Bly0GoRTRh-1_4ra84WGdxOckIYs3VrxhveW5a0v9QpE4dO2fuSdNphyEWQix4bLRx7vOxCrBFhjc_os0ViNn9t4fif2FJNIhnrVCiV_mU6BpNIxBGfyd8ggAhikByQKuVpRcZVxDfI4h2YRzTjvmUc0sXN3qUwuOvqReHsI8EAEqvI87ioMo-CuzLp1hD9vEHv-w
