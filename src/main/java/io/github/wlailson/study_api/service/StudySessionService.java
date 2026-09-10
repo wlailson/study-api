@@ -110,17 +110,17 @@ public class StudySessionService {
 
     private StudySession loadEntity(Long id) {
         return repository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Session not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Session not found " + id));
     }
 
     private StudySession getSession(Long userId) {
         return repository.findByUserIdAndStatus(userId, SessionStatus.IN_PROGRESS)
-                .orElseThrow(() -> new ResourceNotFoundException("user does not currently have an active session"));
+                .orElseThrow(() -> new ResourceNotFoundException("user does not currently have an active session " + "ID" + userId));
     }
 
     private Subject findSubjectById(Long subjectId) {
         return subjectRepository.findById(subjectId)
-                .orElseThrow(() -> new ResourceNotFoundException("subject not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("subject not found " + subjectId));
     }
 
     private void saveRevisions(StudySessionEndDTO dto, StudySession session) {

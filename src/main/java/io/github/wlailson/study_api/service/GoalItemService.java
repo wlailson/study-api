@@ -126,7 +126,7 @@ public class GoalItemService {
     }
 
     private GoalItem loadEntityById(Long goalId, Long id) {
-        return repository.findByIdAndGoalId(id, goalId).orElseThrow(() -> new ResourceNotFoundException("Goalitem not found"));
+        return repository.findByIdAndGoalId(id, goalId).orElseThrow(() -> new ResourceNotFoundException("Goalitem not found " + id));
     }
 
     private Subject loadSubjectById(Long subjectId, Long userId) {
@@ -134,6 +134,6 @@ public class GoalItemService {
     }
 
     private Goal loadGoal(Long id) {
-        return goalRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Goal not found"));
+        return goalRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Goal not found " + id));
     }
 }

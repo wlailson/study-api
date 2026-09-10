@@ -1,17 +1,36 @@
 package io.github.wlailson.study_api.dto;
 
 import io.github.wlailson.study_api.model.Goal;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDate;
 import java.util.List;
 
 public record GoalDTO(
+        @Schema(description = "ID da meta",
+                example = "1")
         Long id,
+
+        @Schema(description = "Título da meta de estudo",
+                example = "Estudar Java")
         String title,
+
+        @Schema(description = "Data de início da meta",
+                example = "2026-09-07")
         LocalDate startDate,
+
+        @Schema(description = "Data de término da meta",
+                example = "2026-12-31")
         LocalDate endDate,
+
+        @Schema(description = "Usuário associado à meta")
         ClientDTO client,
+
+        @Schema(description = "Lista de itens que compõem a meta")
         List<GoalItemDTO> items,
+
+        @Schema(description = "Tempo total estudado em minutos",
+                example = "360")
         Long studied
 ) {
 
