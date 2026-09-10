@@ -1,12 +1,15 @@
 package io.github.wlailson.study_api.dto;
 
-import io.github.wlailson.study_api.model.Revision;
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDate;
 
-public record RevisionUpdateDTO(LocalDate date) {
+public record RevisionUpdateDTO(
+        @NotNull(message = "Data da revisão é obrigatória")
+        @Schema(description = "Nova data programada para a revisão",
+                example = "2026-09-14")
+        LocalDate date
 
-    public RevisionUpdateDTO(Revision entity) {
-        this(entity.getDate());
-    }
+) {
 }

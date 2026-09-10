@@ -1,10 +1,5 @@
 package io.github.wlailson.study_api.config.customgrant;
 
-import java.security.Principal;
-import java.util.Collections;
-import java.util.Set;
-import java.util.stream.Collectors;
-
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -25,6 +20,11 @@ import org.springframework.security.oauth2.server.authorization.token.DefaultOAu
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenContext;
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenGenerator;
 import org.springframework.util.Assert;
+
+import java.security.Principal;
+import java.util.Collections;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class CustomPasswordAuthenticationProvider implements AuthenticationProvider {
 

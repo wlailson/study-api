@@ -97,7 +97,7 @@ public class GoalService {
     }
 
     private Goal loadGoal(Long id) {
-        return repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Goal not found"));
+        return repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Goal not found " + id));
     }
 
     private Long studied(Goal goal, Long userId) {
@@ -108,6 +108,6 @@ public class GoalService {
 
     private Subject findSubjectById(Long subjectId) {
         return subjectRepository.findById(subjectId)
-                .orElseThrow(() -> new ResourceNotFoundException("subject not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("subject not found " + subjectId));
     }
 }

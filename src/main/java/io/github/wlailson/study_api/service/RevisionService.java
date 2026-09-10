@@ -77,6 +77,6 @@ public class RevisionService {
 
         return repository.findById(id)
                 .orElseThrow(() ->
-                        new ResourceNotFoundException("Revision not found"));
+                        new ResourceNotFoundException("Revision not found " + id));
     }
 }
