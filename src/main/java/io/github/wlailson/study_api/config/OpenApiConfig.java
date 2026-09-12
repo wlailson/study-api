@@ -12,16 +12,20 @@ import org.springframework.context.annotation.Configuration;
                 title = "Study API",
                 version = "1.0",
                 description = """
-                        API para gerenciamento de estudos.
+                                API para gerenciamento de estudos.
                         
-                        Usuário para testes:
-                        E-mail: maria@gmail.com
-                        Senha: 123456
+                                Usuário para testes:
                         
-                        Para acessar endpoints protegidos:
-                        1. Faça login em POST /users/login.
-                        2. Copie o token JWT retornado.
-                        3. Clique em "Authorize" e informe o token.
+                        
+                                {
+                                    "email": "maria@gmail.com",
+                                    "password": "123456"
+                                }
+                        
+                                Para acessar endpoints protegidos:
+                                1. Faça login em POST /users/login.
+                                2. Copie o token JWT retornado.
+                                3. Clique em "Authorize" e informe o token.
                         """
         )
 )
