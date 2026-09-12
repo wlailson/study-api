@@ -2,7 +2,7 @@ package io.github.wlailson.study_api.model;
 
 import jakarta.persistence.*;
 
-import java.time.Instant;
+import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -14,18 +14,16 @@ public class StudySession {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String topic;
+    @ManyToOne
+    @JoinColumn(name = "topic_id", nullable = false)
+    private Topic topic;
 
     private Long durationInMinutes;
 
     private Long breakTimeInMinutes;
 
-    @Enumerated(EnumType.STRING)
-    private SessionStatus status;
-
-    private Instant startTime;
-
-    private Instant endTime;
+    @Column(nullable = false)
+    private LocalDate date = LocalDate.now();
 
     @ManyToOne
     @JoinColumn(name = "user_id")
@@ -36,19 +34,25 @@ public class StudySession {
     private Subject subject;
 
     @OneToMany(mappedBy = "session")
-    @OrderBy("date ASC")
+    @OrderBy("scheduledDate ASC")
     private Set<Revision> revisions = new HashSet<>();
 
-    public StudySession(Long id, String topic, Long durationInMinutes, Long breakTimeInMinutes, SessionStatus status, Instant startTime, Instant endTime, User user, Subject subject) {
+    public StudySession(Long id, Topic topic, Long durationInMinutes, Long breakTimeInMinutes, LocalDate date, User user, Subject subject) {
         this.id = id;
         this.topic = topic;
         this.durationInMinutes = durationInMinutes;
         this.breakTimeInMinutes = breakTimeInMinutes;
-        this.status = status;
-        this.startTime = startTime;
-        this.endTime = endTime;
+        this.date = date;
         this.user = user;
         this.subject = subject;
+    }
+
+    public LocalDate getDate() {
+        return date;
+    }
+
+    public void setDate(LocalDate date) {
+        this.date = date;
     }
 
     public StudySession() {
@@ -62,11 +66,11 @@ public class StudySession {
         this.id = id;
     }
 
-    public String getTopic() {
+    public Topic getTopic() {
         return topic;
     }
 
-    public void setTopic(String topic) {
+    public void setTopic(Topic topic) {
         this.topic = topic;
     }
 
@@ -84,30 +88,6 @@ public class StudySession {
 
     public void setBreakTimeInMinutes(Long breakTimeInMinutes) {
         this.breakTimeInMinutes = breakTimeInMinutes;
-    }
-
-    public SessionStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(SessionStatus status) {
-        this.status = status;
-    }
-
-    public Instant getStartTime() {
-        return startTime;
-    }
-
-    public void setStartTime(Instant startTime) {
-        this.startTime = startTime;
-    }
-
-    public Instant getEndTime() {
-        return endTime;
-    }
-
-    public void setEndTime(Instant endTime) {
-        this.endTime = endTime;
     }
 
     public User getUser() {

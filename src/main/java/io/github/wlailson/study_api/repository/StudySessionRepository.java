@@ -1,8 +1,7 @@
 package io.github.wlailson.study_api.repository;
 
-import io.github.wlailson.study_api.dto.StudySessionMinDTO;
-import io.github.wlailson.study_api.model.SessionStatus;
 import io.github.wlailson.study_api.model.StudySession;
+import io.github.wlailson.study_api.projections.StudySessionMinProjection;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -14,20 +13,29 @@ import java.util.Optional;
 
 public interface StudySessionRepository extends JpaRepository<StudySession, Long> {
 
-    boolean existsByUserIdAndStatus(Long userId, SessionStatus status);
+    boolean existsByUser_Id(Long userId);
 
-    Optional<StudySession> findByUserIdAndStatus(Long userId, SessionStatus status);
+    Optional<StudySession> findByUser_Id(Long userId);
 
     boolean existsByIdAndUserId(Long id, Long userId);
 
+    Optional<StudySession> findByIdAndUserId(Long id, Long userId);
+
     @Query("""
-                  SELECT new  io.github.wlailson.study_api.dto.StudySessionMinDTO
-                              (obj.id,obj.subject.name,obj.topic,obj.durationInMinutes)
-                  FROM StudySession obj
-                  WHERE obj.status = 'COMPLETED' AND obj.user.id = :userId
+            SELECT
+                  obj.id AS id,
+                  obj.subject.name AS subject,
+                  obj.topic.name AS topic,
+                  obj.durationInMinutes AS durationInMinutes,
+                  obj.date AS date
+            FROM StudySession obj
+            WHERE obj.user.id = :userId
+            AND UPPER(obj.subject.name) LIKE UPPER(CONCAT('%', :name, '%'))
+            ORDER BY obj.date DESC
             """)
-    Page<StudySessionMinDTO> searchSessions(
+    Page<StudySessionMinProjection> searchSessions(
             Pageable pageable,
+            @Param("name") String name,
             @Param("userId") Long userId);
 
     @Query(nativeQuery = true, value = """
@@ -35,7 +43,6 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
             FROM tb_study_session
             WHERE end_time >= :startDate
             AND end_time < :endDate
-            AND status = 'COMPLETED'
             AND user_id = :userId
             """)
     Long studied(@Param("userId") Long userId,

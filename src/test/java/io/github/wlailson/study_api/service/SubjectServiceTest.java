@@ -1,29 +1,26 @@
 package io.github.wlailson.study_api.service;
 
-import io.github.wlailson.study_api.authentication.AuthenticatedUser;
-import io.github.wlailson.study_api.dto.SubjectDTO;
+import io.github.wlailson.study_api.dto.SubjectRequestDTO;
+import io.github.wlailson.study_api.dto.SubjectResponseDTO;
 import io.github.wlailson.study_api.model.Subject;
 import io.github.wlailson.study_api.model.User;
+import io.github.wlailson.study_api.projections.SubjectMinProjection;
 import io.github.wlailson.study_api.repository.SubjectRepository;
+import io.github.wlailson.study_api.service.exceptions.ConflictException;
 import io.github.wlailson.study_api.service.exceptions.ResourceNotFoundException;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
+import org.springframework.dao.DataIntegrityViolationException;
 
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -33,366 +30,312 @@ class SubjectServiceTest {
     private SubjectRepository repository;
 
     @Mock
-    private AuthenticatedUser authenticatedUser;
+    private AuthService authService;
 
     @InjectMocks
     private SubjectService service;
 
-    private User user;
-    private Subject subject;
+    @Test
+    void findById_shouldReturnSubject() {
 
-    @BeforeEach
-    void setUp() {
+        User user = mock(User.class);
+        Subject subject = mock(Subject.class);
 
-        user = new User();
-        user.setId(1L);
-        user.setName("Maria");
-        user.setEmail("maria@gmail.com");
+        when(user.getId()).thenReturn(1L);
 
-        subject = new Subject();
-        subject.setId(1L);
-        subject.setName("Java");
-        subject.setUser(user);
+        when(authService.getCurrentUser())
+                .thenReturn(user);
+
+        when(repository.findByIdAndUser_Id(1L, 1L))
+                .thenReturn(Optional.of(subject));
+
+        when(subject.getId()).thenReturn(1L);
+        when(subject.getName()).thenReturn("Java");
+
+        SubjectResponseDTO response = service.findById(1L);
+
+        assertNotNull(response);
+        assertEquals(1L, response.id());
+        assertEquals("Java", response.name());
+
+        verify(authService).getCurrentUser();
+        verify(repository).findByIdAndUser_Id(1L, 1L);
     }
 
-    // ============================================================
-    // FIND BY ID
-    // ============================================================
+    @Test
+    void findById_shouldThrowResourceNotFoundException_whenSubjectDoesNotExist() {
 
-    @Nested
-    class FindById {
+        User user = mock(User.class);
 
-        @Test
-        void shouldReturnSubjectWhenExists() {
+        when(user.getId()).thenReturn(1L);
+        when(user.getName()).thenReturn("Maria");
 
-            when(repository.findById(1L))
-                    .thenReturn(Optional.of(subject));
+        when(authService.getCurrentUser())
+                .thenReturn(user);
 
-            SubjectDTO result = service.findById(1L);
+        when(repository.findByIdAndUser_Id(1L, 1L))
+                .thenReturn(Optional.empty());
 
-            assertNotNull(result);
-            assertEquals(1L, result.id());
-            assertEquals("Java", result.name());
+        assertThrows(
+                ResourceNotFoundException.class,
+                () -> service.findById(1L)
+        );
 
-            verify(repository)
-                    .findById(1L);
-
-            verify(authenticatedUser)
-                    .validateOwnership(1L);
-        }
-
-        @Test
-        void shouldThrowResourceNotFoundExceptionWhenSubjectDoesNotExist() {
-
-            when(repository.findById(1L))
-                    .thenReturn(Optional.empty());
-
-            assertThrows(
-                    ResourceNotFoundException.class,
-                    () -> service.findById(1L)
-            );
-
-            verify(repository)
-                    .findById(1L);
-
-            verify(authenticatedUser, never())
-                    .validateOwnership(anyLong());
-        }
-
-        @Test
-        void shouldValidateSubjectOwnership() {
-
-            when(repository.findById(1L))
-                    .thenReturn(Optional.of(subject));
-
-            service.findById(1L);
-
-            verify(authenticatedUser)
-                    .validateOwnership(
-                            subject.getUser().getId()
-                    );
-        }
+        verify(repository).findByIdAndUser_Id(1L, 1L);
     }
 
-    // ============================================================
-    // FIND ALL
-    // ============================================================
+    @Test
+    void findAll_shouldReturnSubjects() {
 
-    @Nested
-    class FindAll {
+        User user = mock(User.class);
 
-        @Test
-        void shouldReturnSubjectsFromAuthenticatedUser() {
+        when(user.getId()).thenReturn(1L);
 
-            Pageable pageable = Pageable.ofSize(10);
+        when(authService.getCurrentUser())
+                .thenReturn(user);
 
-            Page<Subject> page =
-                    new PageImpl<>(List.of(subject));
+        SubjectMinProjection projection =
+                mock(SubjectMinProjection.class);
 
-            when(authenticatedUser.get())
-                    .thenReturn(user);
+        List<SubjectMinProjection> subjects =
+                List.of(projection);
 
-            when(repository.findAllByUserId(
-                    pageable,
-                    user.getId()
-            )).thenReturn(page);
+        when(repository.searchSubjectByUserId(1L))
+                .thenReturn(subjects);
 
-            Page<SubjectDTO> result =
-                    service.findAll(pageable);
+        List<SubjectMinProjection> response =
+                service.findAll();
 
-            assertNotNull(result);
-            assertEquals(1, result.getTotalElements());
+        assertNotNull(response);
+        assertEquals(1, response.size());
+        assertSame(projection, response.get(0));
 
-            SubjectDTO dto = result.getContent().get(0);
-
-            assertEquals(1L, dto.id());
-            assertEquals("Java", dto.name());
-
-            verify(authenticatedUser)
-                    .get();
-
-            verify(repository)
-                    .findAllByUserId(
-                            pageable,
-                            user.getId()
-                    );
-        }
-
-        @Test
-        void shouldReturnEmptyPageWhenUserHasNoSubjects() {
-
-            Pageable pageable = Pageable.ofSize(10);
-
-            Page<Subject> page =
-                    new PageImpl<>(List.of());
-
-            when(authenticatedUser.get())
-                    .thenReturn(user);
-
-            when(repository.findAllByUserId(
-                    pageable,
-                    user.getId()
-            )).thenReturn(page);
-
-            Page<SubjectDTO> result =
-                    service.findAll(pageable);
-
-            assertNotNull(result);
-            assertTrue(result.isEmpty());
-
-            verify(repository)
-                    .findAllByUserId(
-                            pageable,
-                            user.getId()
-                    );
-        }
+        verify(authService).getCurrentUser();
+        verify(repository).searchSubjectByUserId(1L);
     }
 
-    // ============================================================
-    // CREATE
-    // ============================================================
+    @Test
+    void findAll_shouldReturnEmptyList_whenUserHasNoSubjects() {
 
-    @Nested
-    class Create {
+        User user = mock(User.class);
 
-        @Test
-        void shouldCreateSubjectSuccessfully() {
+        when(user.getId()).thenReturn(1L);
 
-            SubjectDTO dto =
-                    new SubjectDTO(null, "Spring Boot");
+        when(authService.getCurrentUser())
+                .thenReturn(user);
 
-            when(authenticatedUser.get())
-                    .thenReturn(user);
+        when(repository.searchSubjectByUserId(1L))
+                .thenReturn(List.of());
 
-            when(repository.save(any(Subject.class)))
-                    .thenAnswer(invocation -> {
+        List<SubjectMinProjection> response =
+                service.findAll();
 
-                        Subject saved =
-                                invocation.getArgument(0);
+        assertNotNull(response);
+        assertTrue(response.isEmpty());
 
-                        saved.setId(10L);
-
-                        return saved;
-                    });
-
-            SubjectDTO result =
-                    service.create(dto);
-
-            assertNotNull(result);
-            assertEquals(10L, result.id());
-            assertEquals("Spring Boot", result.name());
-
-            verify(authenticatedUser)
-                    .get();
-
-            verify(repository)
-                    .save(any(Subject.class));
-        }
-
-        @Test
-        void shouldCreateSubjectWithCorrectData() {
-
-            SubjectDTO dto =
-                    new SubjectDTO(null, "Spring Boot");
-
-            when(authenticatedUser.get())
-                    .thenReturn(user);
-
-            when(repository.save(any(Subject.class)))
-                    .thenAnswer(invocation -> {
-
-                        Subject saved =
-                                invocation.getArgument(0);
-
-                        saved.setId(10L);
-
-                        return saved;
-                    });
-
-            service.create(dto);
-
-            ArgumentCaptor<Subject> captor =
-                    ArgumentCaptor.forClass(Subject.class);
-
-            verify(repository)
-                    .save(captor.capture());
-
-            Subject saved = captor.getValue();
-
-            assertEquals(
-                    "Spring Boot",
-                    saved.getName()
-            );
-
-            assertEquals(
-                    user,
-                    saved.getUser()
-            );
-        }
+        verify(repository).searchSubjectByUserId(1L);
     }
 
-    // ============================================================
-    // UPDATE
-    // ============================================================
+    @Test
+    void create_shouldCreateAndReturnSubject() {
 
-    @Nested
-    class Update {
+        User user = mock(User.class);
 
-        @Test
-        void shouldUpdateSubjectSuccessfully() {
+        when(authService.getCurrentUser())
+                .thenReturn(user);
 
-            SubjectDTO dto =
-                    new SubjectDTO(
-                            1L,
-                            "Spring Boot"
-                    );
+        when(user.getId()).thenReturn(1L);
 
-            when(repository.findById(1L))
-                    .thenReturn(Optional.of(subject));
+        when(repository.findByNameIgnoreCaseAndUser_Id(
+                "Java",
+                1L
+        )).thenReturn(Optional.empty());
 
-            SubjectDTO result =
-                    service.update(1L, dto);
+        SubjectRequestDTO request =
+                new SubjectRequestDTO("Java");
 
-            assertNotNull(result);
+        SubjectResponseDTO response =
+                service.create(request);
 
-            assertEquals(
-                    "Spring Boot",
-                    result.name()
-            );
+        assertNotNull(response);
+        assertEquals("Java", response.name());
 
-            assertEquals(
-                    "Spring Boot",
-                    subject.getName()
-            );
+        ArgumentCaptor<Subject> captor =
+                ArgumentCaptor.forClass(Subject.class);
 
-            verify(repository)
-                    .findById(1L);
+        verify(repository).save(captor.capture());
 
-            verify(authenticatedUser)
-                    .validateOwnership(1L);
-        }
+        Subject subject = captor.getValue();
 
-        @Test
-        void shouldThrowResourceNotFoundExceptionWhenSubjectDoesNotExist() {
+        assertEquals("Java", subject.getName());
+        assertSame(user, subject.getUser());
 
-            SubjectDTO dto =
-                    new SubjectDTO(
-                            1L,
-                            "Spring Boot"
-                    );
-
-            when(repository.findById(1L))
-                    .thenReturn(Optional.empty());
-
-            assertThrows(
-                    ResourceNotFoundException.class,
-                    () -> service.update(1L, dto)
-            );
-
-            verify(authenticatedUser, never())
-                    .validateOwnership(anyLong());
-        }
-
-        @Test
-        void shouldNotSaveSubjectExplicitly() {
-
-            SubjectDTO dto =
-                    new SubjectDTO(
-                            1L,
-                            "Spring Boot"
-                    );
-
-            when(repository.findById(1L))
-                    .thenReturn(Optional.of(subject));
-
-            service.update(1L, dto);
-
-            verify(repository, never())
-                    .save(any(Subject.class));
-        }
+        verify(repository)
+                .findByNameIgnoreCaseAndUser_Id("Java", 1L);
     }
 
-    // ============================================================
-    // DELETE
-    // ============================================================
+    @Test
+    void create_shouldReturnExistingSubject_whenNameAlreadyExists() {
 
-    @Nested
-    class Delete {
+        User user = mock(User.class);
+        Subject subject = mock(Subject.class);
 
-        @Test
-        void shouldDeleteSubjectSuccessfully() {
+        when(user.getId()).thenReturn(1L);
 
-            when(repository.findById(1L))
-                    .thenReturn(Optional.of(subject));
+        when(authService.getCurrentUser())
+                .thenReturn(user);
 
-            service.delete(1L);
+        when(repository.findByNameIgnoreCaseAndUser_Id(
+                "Java",
+                1L
+        )).thenReturn(Optional.of(subject));
 
-            verify(repository)
-                    .findById(1L);
+        when(subject.getId()).thenReturn(1L);
+        when(subject.getName()).thenReturn("Java");
 
-            verify(authenticatedUser)
-                    .validateOwnership(1L);
+        SubjectRequestDTO request =
+                new SubjectRequestDTO("Java");
 
-            verify(repository)
-                    .delete(subject);
-        }
+        SubjectResponseDTO response =
+                service.create(request);
 
-        @Test
-        void shouldThrowResourceNotFoundExceptionWhenSubjectDoesNotExist() {
+        assertNotNull(response);
+        assertEquals(1L, response.id());
+        assertEquals("Java", response.name());
 
-            when(repository.findById(1L))
-                    .thenReturn(Optional.empty());
+        verify(repository).save(subject);
 
-            assertThrows(
-                    ResourceNotFoundException.class,
-                    () -> service.delete(1L)
-            );
+        verify(repository)
+                .findByNameIgnoreCaseAndUser_Id("Java", 1L);
+    }
 
-            verify(repository, never())
-                    .delete(any(Subject.class));
+    @Test
+    void update_shouldUpdateSubjectName() {
 
-            verify(authenticatedUser, never())
-                    .validateOwnership(anyLong());
-        }
+        User user = mock(User.class);
+        Subject subject = mock(Subject.class);
+
+        when(user.getId()).thenReturn(1L);
+
+        when(authService.getCurrentUser())
+                .thenReturn(user);
+
+        when(repository.findByIdAndUser_Id(1L, 1L))
+                .thenReturn(Optional.of(subject));
+
+        when(subject.getId()).thenReturn(1L);
+        when(subject.getName()).thenReturn("Java");
+
+        SubjectRequestDTO request =
+                new SubjectRequestDTO("Java Avançado");
+
+        SubjectResponseDTO response =
+                service.update(1L, request);
+
+        verify(subject).setName("Java Avançado");
+
+        assertNotNull(response);
+        assertEquals(1L, response.id());
+    }
+
+    @Test
+    void update_shouldThrowResourceNotFoundException_whenSubjectDoesNotExist() {
+
+        User user = mock(User.class);
+
+        when(user.getId()).thenReturn(1L);
+        when(user.getName()).thenReturn("Maria");
+
+        when(authService.getCurrentUser())
+                .thenReturn(user);
+
+        when(repository.findByIdAndUser_Id(1L, 1L))
+                .thenReturn(Optional.empty());
+
+        SubjectRequestDTO request =
+                new SubjectRequestDTO("Java");
+
+        assertThrows(
+                ResourceNotFoundException.class,
+                () -> service.update(1L, request)
+        );
+
+        verify(repository).findByIdAndUser_Id(1L, 1L);
+    }
+
+    @Test
+    void delete_shouldDeleteSubject() {
+
+        User user = mock(User.class);
+        Subject subject = mock(Subject.class);
+
+        when(user.getId()).thenReturn(1L);
+        when(user.getName()).thenReturn("Maria");
+
+        when(authService.getCurrentUser())
+                .thenReturn(user);
+
+        when(repository.findByIdAndUser_Id(1L, 1L))
+                .thenReturn(Optional.of(subject));
+
+        when(subject.getId()).thenReturn(1L);
+
+        service.delete(1L);
+
+        verify(repository).delete(subject);
+        verify(repository).flush();
+    }
+
+    @Test
+    void delete_shouldThrowResourceNotFoundException_whenSubjectDoesNotExist() {
+
+        User user = mock(User.class);
+
+        when(user.getId()).thenReturn(1L);
+        when(user.getName()).thenReturn("Maria");
+
+        when(authService.getCurrentUser())
+                .thenReturn(user);
+
+        when(repository.findByIdAndUser_Id(1L, 1L))
+                .thenReturn(Optional.empty());
+
+        assertThrows(
+                ResourceNotFoundException.class,
+                () -> service.delete(1L)
+        );
+
+        verify(repository, never()).delete(any());
+        verify(repository, never()).flush();
+    }
+
+    @Test
+    void delete_shouldThrowConflictException_whenSubjectHasSessions() {
+
+        User user = mock(User.class);
+        Subject subject = mock(Subject.class);
+
+        when(user.getId()).thenReturn(1L);
+        when(user.getName()).thenReturn("Maria");
+
+        when(authService.getCurrentUser())
+                .thenReturn(user);
+
+        when(repository.findByIdAndUser_Id(1L, 1L))
+                .thenReturn(Optional.of(subject));
+
+        when(subject.getId()).thenReturn(1L);
+
+        doThrow(new DataIntegrityViolationException("FK violation"))
+                .when(repository)
+                .flush();
+
+        assertThrows(
+                ConflictException.class,
+                () -> service.delete(1L)
+        );
+
+        verify(repository).delete(subject);
+        verify(repository).flush();
     }
 }

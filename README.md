@@ -2,10 +2,11 @@
 
 API REST para gerenciamento de estudos, desenvolvida com Java e Spring Boot.
 
-O projeto permite o gerenciamento de usuários, matérias, sessões de estudo, revisões e metas, utilizando autenticação e autorização baseada em OAuth2.
+O projeto permite o gerenciamento de usuários, matérias, sessões de estudo, revisões e metas, utilizando autenticação e autorização baseada em **Spring Security e JWT**.
 
 ---
 
+* [Sobre o projeto](#sobre-o-projeto)
 * [Tecnologias](#tecnologias)
 * [Modelo de dados](#modelo-de-dados)
 * [Diagrama de instâncias](#diagrama-de-instâncias)
@@ -13,18 +14,6 @@ O projeto permite o gerenciamento de usuários, matérias, sessões de estudo, r
 * [Autenticação](#autenticação)
 * [Execução com Docker](#execução-com-docker)
 * [Swagger / OpenAPI](#swagger--openapi)
-
----
-
-## Modelo de dados
-
-![Modelo de Entidade](docs/modelo-entidade.png)
-
----
-
-## Diagrama de instâncias
-
-![Diagrama de Instâncias](docs/diagrama-instancias.png)
 
 ---
 
@@ -40,18 +29,28 @@ Entre as principais funcionalidades estão:
 * Controle de revisões;
 * Gerenciamento de metas;
 * Controle de acesso baseado em funções;
-* Autenticação utilizando OAuth2.
+* Autenticação utilizando JWT.
 
 ---
+
 ## Tecnologias
 
 * Java
-* Spring
-* OAuth2
+* Spring Boot
+* Spring Security
+* JWT
+* JPA / Hibernate
 * Flyway
 * Docker
 * JUnit
 * Mockito
+
+---
+
+## Modelo de dados
+
+![Modelo de Entidade](docs/modelo-entidade.png)
+
 ---
 
 ## Banco de dados e migrations
@@ -70,35 +69,39 @@ As migrations responsáveis pela criação das tabelas e relacionamentos estão 
 
 ## Autenticação
 
-A API utiliza **OAuth2** para autenticação e autorização.
+A API utiliza **Spring Security e JWT** para autenticação e autorização.
 
-O acesso aos endpoints protegidos requer um token de acesso válido.
+O acesso aos endpoints protegidos requer um token JWT válido.
 
-Para facilitar os testes da API, uma collection com as requisições pode ser encontrada em:
+Para facilitar os testes da API, as collections com as requisições podem ser encontradas em:
 
-[`Collections.har`](docs/collection.har)
-[`Collections.yml`](docs/collection.yaml)
-
-A collection pode ser disponibilizada nos formatos **Insomnia v5** ou **HAR**.
+* [`Collection HAR`](docs/collection.har)
+* [`Collection YAML`](docs/collection.yaml)
 
 ### Obtendo o token
 
-Para obter o token de acesso, envie uma requisição:
+Para obter um token, envie uma requisição:
 
 ```http
-POST /oauth2/token
+POST /users/login
 ```
 
-Utilize o tipo de corpo **`application/x-www-form-urlencoded`**.
+Utilize o seguinte corpo JSON:
 
-| Campo           | Valor             |
-| --------------- | ----------------- |
-| `username`      | `maria@gmail.com` |
-| `password`      | `123456`          |
-| `client-id`     | `myclientid`      |
-| `client-secret` | `myclientsecret`  |
+```json
+{
+    "email": "maria@gmail.com",
+    "password": "123456"
+}
+```
 
-Após obter o token, utilize-o nas requisições aos endpoints protegidos.
+A API retornará um token JWT.
+
+Após obter o token, utilize-o nas requisições aos endpoints protegidos através do header:
+
+```http
+Authorization: Bearer <token>
+```
 
 ---
 
@@ -132,7 +135,7 @@ http://localhost:8080
 
 ## Swagger / OpenAPI
 
-A API possui documentação interativa através do Swagger/OpenAPI.
+A API possui documentação interativa através do **Swagger/OpenAPI**.
 
 Após iniciar a aplicação, acesse:
 
@@ -140,6 +143,13 @@ Após iniciar a aplicação, acesse:
 http://localhost:8080/swagger-ui.html
 ```
 
-O Swagger permite visualizar os endpoints disponíveis e realizar requisições diretamente pela interface.
+O Swagger permite visualizar os endpoints disponíveis, consultar seus parâmetros e realizar requisições diretamente pela interface.
+
+Para acessar endpoints protegidos:
+
+1. Faça login através de `POST /users/login`;
+2. Copie o token JWT retornado;
+3. Clique em **Authorize** no Swagger;
+4. Informe o token JWT.
 
 ---

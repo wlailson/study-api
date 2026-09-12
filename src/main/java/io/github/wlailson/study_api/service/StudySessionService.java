@@ -1,139 +1,128 @@
 package io.github.wlailson.study_api.service;
 
-import io.github.wlailson.study_api.authentication.AuthenticatedUser;
-import io.github.wlailson.study_api.dto.StudySessionDTO;
-import io.github.wlailson.study_api.dto.StudySessionEndDTO;
-import io.github.wlailson.study_api.dto.StudySessionMinDTO;
-import io.github.wlailson.study_api.dto.StudySessionUpdateDTO;
-import io.github.wlailson.study_api.model.*;
-import io.github.wlailson.study_api.repository.RevisionRepository;
+
+import io.github.wlailson.study_api.dto.StudySessionRequestDTO;
+import io.github.wlailson.study_api.dto.StudySessionResponseDTO;
+import io.github.wlailson.study_api.dto.StudySessionResponseMinDTO;
+import io.github.wlailson.study_api.model.StudySession;
+import io.github.wlailson.study_api.model.User;
+import io.github.wlailson.study_api.projections.StudySessionMinProjection;
+import io.github.wlailson.study_api.projections.TopicMinProjection;
 import io.github.wlailson.study_api.repository.StudySessionRepository;
-import io.github.wlailson.study_api.repository.SubjectRepository;
 import io.github.wlailson.study_api.service.exceptions.ConflictException;
 import io.github.wlailson.study_api.service.exceptions.ResourceNotFoundException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
 import java.util.List;
 
 @Service
 public class StudySessionService {
 
     private final StudySessionRepository repository;
-    private final SubjectRepository subjectRepository;
-    private final AuthenticatedUser authenticatedUser;
-    private final RevisionRepository revisionRepository;
+    private final AuthService authService;
+    private final SubjectService subjectService;
+    private final TopicService topicService;
+    private final RevisionService revisionService;
 
-    public StudySessionService(StudySessionRepository repository, UserService userService, SubjectRepository subjectRepository, AuthenticatedUser authenticatedUser, RevisionRepository revisionRepository) {
+    public StudySessionService(
+            StudySessionRepository repository,
+            AuthService authService,
+            SubjectService subjectService,
+            TopicService topicService, RevisionService revisionService) {
         this.repository = repository;
-        this.subjectRepository = subjectRepository;
-        this.authenticatedUser = authenticatedUser;
-        this.revisionRepository = revisionRepository;
+        this.authService = authService;
+        this.subjectService = subjectService;
+        this.topicService = topicService;
+        this.revisionService = revisionService;
     }
 
+
     @Transactional(readOnly = true)
-    public StudySessionDTO findById(Long id) {
+    public StudySessionResponseDTO findById(Long id) {
         StudySession session = loadEntity(id);
-        authenticatedUser.validateOwnership(session.getUser().getId());
-        return new StudySessionDTO(session);
+        return new StudySessionResponseDTO(session);
     }
 
     @Transactional(readOnly = true)
-    public Page<StudySessionMinDTO> findAll(Pageable pageable) {
-        User user = authenticatedUser.get();
-        return repository.searchSessions(pageable, user.getId());
+    public Page<StudySessionResponseMinDTO> findAll(Pageable pageable, String name) {
+        User user = authService.getCurrentUser();
+
+        Page<StudySessionMinProjection> projection = repository.searchSessions(pageable, name, user.getId());
+
+        Page<StudySessionResponseMinDTO> response = projection.map(p -> {
+            StudySessionResponseMinDTO dto = new StudySessionResponseMinDTO(
+                    p.getId(), p.getSubject(),
+                    p.getTopic(),
+                    p.getDurationInMinutes(),
+                    p.getDate());
+            return dto;
+        });
+
+        return response;
     }
 
     @Transactional
-    public Long startSession(Long subjectId) {
-        User user = authenticatedUser.get();
+    public StudySessionResponseDTO saveSession(Long subjectId, StudySessionRequestDTO request) {
 
-        if (repository.existsByUserIdAndStatus(user.getId(), SessionStatus.IN_PROGRESS)) {
-            throw new ConflictException("User already has an active study session");
-        }
-
-        StudySession session = new StudySession();
-        session.setSubject(findSubjectById(subjectId));
-        session.setStatus(SessionStatus.IN_PROGRESS);
-        session.setStartTime(Instant.now());
-        session.setUser(user);
+        StudySession session = createEntity(subjectId, request);
 
         repository.save(session);
 
-        return session.getId();
-    }
+        revisionService.saveRevisions(request, session);
 
-    @Transactional(readOnly = true)
-    public StudySessionDTO findSessionInProgress() {
-        User user = authenticatedUser.get();
-        StudySession session = getSession(user.getId());
-        return new StudySessionDTO(session);
-    }
-
-    @Transactional
-    public StudySessionDTO endSession(StudySessionEndDTO dto) {
-        User user = authenticatedUser.get();
-
-        StudySession session = getSession(user.getId());
-
-        saveRevisions(dto, session);
-
-        session.setEndTime(Instant.now());
-        session.setStatus(SessionStatus.COMPLETED);
-        session.setDurationInMinutes(dto.durationInMinutes());
-        session.setBreakTimeInMinutes(dto.breakTimeInMinutes());
-        session.setTopic(dto.topic());
-
-        return new StudySessionDTO(session);
-    }
-
-    @Transactional
-    public StudySessionDTO updateSession(Long sessionId, StudySessionUpdateDTO dto) {
-        StudySession session = loadEntity(sessionId);
-        authenticatedUser.validateOwnership(session.getUser().getId());
-        session.setTopic(dto.topic());
-        session.setDurationInMinutes(dto.durationInMinutes());
-        session.setBreakTimeInMinutes(dto.breakTimeInMinutes());
-
-        return new StudySessionDTO(session);
+        return new StudySessionResponseDTO(session);
     }
 
     @Transactional
     public void deleteSession(Long sessionId) {
         StudySession session = loadEntity(sessionId);
-        authenticatedUser.validateOwnership(session.getUser().getId());
-        repository.deleteById(sessionId);
+        String topic = session.getTopic().getName();
+        String subject = session.getSubject().getName();
+        String user = authService.getCurrentUser().getName();
+
+        try {
+            repository.delete(session);
+            repository.flush();
+        } catch (DataIntegrityViolationException e) {
+            throw new ConflictException(
+                    "Cannot delete study session The session has associated revisions. " +
+                            "Session ID: " + sessionId +
+                            ", Subject: " + subject +
+                            ", Topic: " + topic +
+                            ", User: " + user
+            );
+        }
+
+    }
+
+    @Transactional(readOnly = true)
+    public List<TopicMinProjection> findAllTopics() {
+        return topicService.getAllTopics();
+    }
+
+    private StudySession createEntity(Long subjectId, StudySessionRequestDTO request) {
+        User user = authService.getCurrentUser();
+
+        StudySession session = new StudySession();
+
+        session.setBreakTimeInMinutes(request.breakTimeInMinutes());
+        session.setUser(user);
+        session.setDurationInMinutes(request.durationInMinutes());
+        session.setSubject(subjectService.getSubject(subjectId));
+        session.setTopic(topicService.getOrCreate(request.topic()));
+
+        return session;
     }
 
     private StudySession loadEntity(Long id) {
-        return repository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Session not found " + id));
+        User user = authService.getCurrentUser();
+        StudySession session = repository.findByIdAndUserId(id, user.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Session not found ID: " + id + ", user: " + user.getName()));
+
+        return session;
     }
-
-    private StudySession getSession(Long userId) {
-        return repository.findByUserIdAndStatus(userId, SessionStatus.IN_PROGRESS)
-                .orElseThrow(() -> new ResourceNotFoundException("user does not currently have an active session " + "ID" + userId));
-    }
-
-    private Subject findSubjectById(Long subjectId) {
-        return subjectRepository.findById(subjectId)
-                .orElseThrow(() -> new ResourceNotFoundException("subject not found " + subjectId));
-    }
-
-    private void saveRevisions(StudySessionEndDTO dto, StudySession session) {
-
-        List<Revision> revisions = dto.revisions().stream().map(revisionDTO -> {
-            Revision entity = new Revision();
-            entity.setDate(revisionDTO.date());
-            entity.setSession(session);
-            return entity;
-        }).toList();
-
-        revisionRepository.saveAll(revisions);
-    }
-
-
 }

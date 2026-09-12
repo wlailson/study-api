@@ -1,571 +1,416 @@
 package io.github.wlailson.study_api.service;
 
-import io.github.wlailson.study_api.authentication.AuthenticatedUser;
-import io.github.wlailson.study_api.dto.*;
-import io.github.wlailson.study_api.model.*;
-import io.github.wlailson.study_api.repository.RevisionRepository;
+import io.github.wlailson.study_api.dto.StudySessionRequestDTO;
+import io.github.wlailson.study_api.dto.StudySessionResponseDTO;
+import io.github.wlailson.study_api.dto.StudySessionResponseMinDTO;
+import io.github.wlailson.study_api.model.StudySession;
+import io.github.wlailson.study_api.model.User;
+import io.github.wlailson.study_api.projections.StudySessionMinProjection;
+import io.github.wlailson.study_api.projections.TopicMinProjection;
 import io.github.wlailson.study_api.repository.StudySessionRepository;
-import io.github.wlailson.study_api.repository.SubjectRepository;
 import io.github.wlailson.study_api.service.exceptions.ConflictException;
 import io.github.wlailson.study_api.service.exceptions.ResourceNotFoundException;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
-import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class StudySessionServiceTest {
 
-
     @Mock
     private StudySessionRepository repository;
 
     @Mock
-    private SubjectRepository subjectRepository;
+    private AuthService authService;
 
     @Mock
-    private AuthenticatedUser authenticatedUser;
+    private SubjectService subjectService;
 
     @Mock
-    private RevisionRepository revisionRepository;
+    private TopicService topicService;
+
+    @Mock
+    private RevisionService revisionService;
 
     @InjectMocks
     private StudySessionService service;
 
-    private User user;
-    private Subject subject;
-    private StudySession session;
+    @Test
+    void findById_shouldReturnSession() {
 
-    @BeforeEach
-    void setUp() {
+        User user = mock(User.class);
+        StudySession session = mock(StudySession.class);
+        var topic = mock(io.github.wlailson.study_api.model.Topic.class);
+        var subject = mock(io.github.wlailson.study_api.model.Subject.class);
 
-        user = new User();
-        user.setId(1L);
-        user.setName("Maria");
-        user.setEmail("maria@gmail.com");
+        when(user.getId()).thenReturn(1L);
+        when(user.getName()).thenReturn("Maria");
 
-        subject = new Subject();
-        subject.setId(1L);
-        subject.setName("Java");
+        when(session.getId()).thenReturn(1L);
+        when(session.getTopic()).thenReturn(topic);
+        when(session.getSubject()).thenReturn(subject);
+        when(session.getUser()).thenReturn(user);
+        when(session.getDurationInMinutes()).thenReturn(60L);
+        when(session.getBreakTimeInMinutes()).thenReturn(10L);
+        when(session.getRevisions()).thenReturn(java.util.Set.of());
 
-        session = new StudySession();
-        session.setId(1L);
-        session.setUser(user);
-        session.setSubject(subject);
-        session.setStatus(SessionStatus.IN_PROGRESS);
-        session.setStartTime(Instant.now());
+        when(topic.getId()).thenReturn(1L);
+        when(topic.getName()).thenReturn("Spring Boot");
+
+        when(subject.getId()).thenReturn(1L);
+        when(subject.getName()).thenReturn("Java");
+
+        when(authService.getCurrentUser()).thenReturn(user);
+
+        when(repository.findByIdAndUserId(1L, 1L))
+                .thenReturn(Optional.of(session));
+
+        StudySessionResponseDTO response = service.findById(1L);
+
+        assertNotNull(response);
+        assertEquals(1L, response.id());
+        assertEquals(60L, response.durationInMinutes());
+        assertEquals(10L, response.breakTimeInMinutes());
+
+        verify(authService).getCurrentUser();
+        verify(repository).findByIdAndUserId(1L, 1L);
     }
 
-    @Nested
-    class FindById {
+    @Test
+    void findById_shouldThrowResourceNotFoundException_whenSessionDoesNotExist() {
 
-        @Test
-        void shouldReturnSessionWhenExists() {
+        User user = mock(User.class);
 
-            when(repository.findById(1L))
-                    .thenReturn(Optional.of(session));
+        when(user.getId()).thenReturn(1L);
+        when(user.getName()).thenReturn("Maria");
 
-            StudySessionDTO result = service.findById(1L);
+        when(authService.getCurrentUser()).thenReturn(user);
 
-            assertNotNull(result);
+        when(repository.findByIdAndUserId(1L, 1L))
+                .thenReturn(Optional.empty());
 
-            verify(repository).findById(1L);
-            verify(authenticatedUser)
-                    .validateOwnership(1L);
-        }
+        assertThrows(
+                ResourceNotFoundException.class,
+                () -> service.findById(1L)
+        );
 
-        @Test
-        void shouldThrowResourceNotFoundExceptionWhenSessionDoesNotExist() {
-
-            when(repository.findById(1L))
-                    .thenReturn(Optional.empty());
-
-            assertThrows(
-                    ResourceNotFoundException.class,
-                    () -> service.findById(1L)
-            );
-
-            verify(repository).findById(1L);
-
-            verify(authenticatedUser, never())
-                    .validateOwnership(anyLong());
-        }
-
-        @Test
-        void shouldValidateSessionOwnership() {
-
-            when(repository.findById(1L))
-                    .thenReturn(Optional.of(session));
-
-            service.findById(1L);
-
-            verify(authenticatedUser)
-                    .validateOwnership(user.getId());
-        }
+        verify(repository).findByIdAndUserId(1L, 1L);
     }
 
-    @Nested
-    class FindAll {
+    @Test
+    void findAll_shouldReturnSessions() {
 
-        @Test
-        void shouldReturnSessionsFromAuthenticatedUser() {
+        User user = mock(User.class);
 
-            Pageable pageable = Pageable.ofSize(10);
+        when(user.getId()).thenReturn(1L);
 
-            Page<StudySessionMinDTO> page =
-                    new PageImpl<>(List.of());
+        when(authService.getCurrentUser()).thenReturn(user);
 
-            when(authenticatedUser.get())
-                    .thenReturn(user);
+        Pageable pageable = PageRequest.of(0, 10);
 
-            when(repository.searchSessions(
-                    pageable,
-                    user.getId()
-            )).thenReturn(page);
+        StudySessionMinProjection projection =
+                mock(StudySessionMinProjection.class);
 
-            Page<StudySessionMinDTO> result =
-                    service.findAll(pageable);
+        when(projection.getId()).thenReturn(1L);
+        when(projection.getSubject()).thenReturn("Java");
+        when(projection.getTopic()).thenReturn("Spring Boot");
+        when(projection.getDurationInMinutes()).thenReturn(60L);
+        when(projection.getDate())
+                .thenReturn(LocalDate.of(2026, 9, 10));
 
-            assertNotNull(result);
-            assertSame(page, result);
+        Page<StudySessionMinProjection> page =
+                new PageImpl<>(List.of(projection), pageable, 1);
 
-            verify(authenticatedUser).get();
+        when(repository.searchSessions(pageable, "", 1L))
+                .thenReturn(page);
 
-            verify(repository)
-                    .searchSessions(
-                            pageable,
-                            user.getId()
-                    );
-        }
+        Page<StudySessionResponseMinDTO> response =
+                service.findAll(pageable, "");
+
+        assertNotNull(response);
+        assertEquals(1, response.getTotalElements());
+
+        StudySessionResponseMinDTO dto = response.getContent().get(0);
+
+        assertEquals(1L, dto.id());
+        assertEquals("Java", dto.subjectName());
+        assertEquals("Spring Boot", dto.topic());
+        assertEquals(60L, dto.durationInMinutes());
+        assertEquals(
+                LocalDate.of(2026, 9, 10),
+                dto.date()
+        );
+
+        verify(repository)
+                .searchSessions(pageable, "", 1L);
     }
 
-    @Nested
-    class StartSession {
+    @Test
+    void findAll_shouldPassNameFilterToRepository() {
 
-        @Test
-        void shouldStartSessionSuccessfully() {
+        User user = mock(User.class);
 
-            when(authenticatedUser.get())
-                    .thenReturn(user);
+        when(user.getId()).thenReturn(1L);
+        when(authService.getCurrentUser()).thenReturn(user);
 
-            when(repository.existsByUserIdAndStatus(
-                    user.getId(),
-                    SessionStatus.IN_PROGRESS
-            )).thenReturn(false);
+        Pageable pageable = PageRequest.of(0, 10);
 
-            when(subjectRepository.findById(1L))
-                    .thenReturn(Optional.of(subject));
+        Page<StudySessionMinProjection> page =
+                new PageImpl<>(List.of(), pageable, 0);
 
-            when(repository.save(any(StudySession.class)))
-                    .thenAnswer(invocation -> {
+        when(repository.searchSessions(
+                pageable,
+                "Java",
+                1L
+        )).thenReturn(page);
 
-                        StudySession saved =
-                                invocation.getArgument(0);
+        Page<StudySessionResponseMinDTO> response =
+                service.findAll(pageable, "Java");
 
-                        saved.setId(10L);
+        assertNotNull(response);
+        assertTrue(response.isEmpty());
 
-                        return saved;
-                    });
-
-            Long result = service.startSession(1L);
-
-            assertEquals(10L, result);
-
-            verify(repository)
-                    .existsByUserIdAndStatus(
-                            1L,
-                            SessionStatus.IN_PROGRESS
-                    );
-
-            verify(subjectRepository)
-                    .findById(1L);
-
-            verify(repository)
-                    .save(any(StudySession.class));
-        }
-
-        @Test
-        void shouldCreateSessionWithCorrectData() {
-
-            when(authenticatedUser.get())
-                    .thenReturn(user);
-
-            when(repository.existsByUserIdAndStatus(
-                    1L,
-                    SessionStatus.IN_PROGRESS
-            )).thenReturn(false);
-
-            when(subjectRepository.findById(1L))
-                    .thenReturn(Optional.of(subject));
-
-            when(repository.save(any(StudySession.class)))
-                    .thenAnswer(invocation -> {
-
-                        StudySession saved =
-                                invocation.getArgument(0);
-
-                        saved.setId(10L);
-
-                        return saved;
-                    });
-
-            service.startSession(1L);
-
-            ArgumentCaptor<StudySession> captor =
-                    ArgumentCaptor.forClass(StudySession.class);
-
-            verify(repository).save(captor.capture());
-
-            StudySession saved = captor.getValue();
-
-            assertEquals(user, saved.getUser());
-            assertEquals(subject, saved.getSubject());
-            assertEquals(
-                    SessionStatus.IN_PROGRESS,
-                    saved.getStatus()
-            );
-            assertNotNull(saved.getStartTime());
-        }
-
-        @Test
-        void shouldThrowConflictExceptionWhenUserAlreadyHasActiveSession() {
-
-            when(authenticatedUser.get())
-                    .thenReturn(user);
-
-            when(repository.existsByUserIdAndStatus(
-                    1L,
-                    SessionStatus.IN_PROGRESS
-            )).thenReturn(true);
-
-            assertThrows(
-                    ConflictException.class,
-                    () -> service.startSession(1L)
-            );
-
-            verify(repository, never())
-                    .save(any());
-
-            verify(subjectRepository, never())
-                    .findById(anyLong());
-        }
-
-        @Test
-        void shouldThrowResourceNotFoundExceptionWhenSubjectDoesNotExist() {
-
-            when(authenticatedUser.get())
-                    .thenReturn(user);
-
-            when(repository.existsByUserIdAndStatus(
-                    1L,
-                    SessionStatus.IN_PROGRESS
-            )).thenReturn(false);
-
-            when(subjectRepository.findById(99L))
-                    .thenReturn(Optional.empty());
-
-            assertThrows(
-                    ResourceNotFoundException.class,
-                    () -> service.startSession(99L)
-            );
-
-            verify(repository, never())
-                    .save(any());
-        }
+        verify(repository)
+                .searchSessions(pageable, "Java", 1L);
     }
 
-    @Nested
-    class FindSessionInProgress {
+    @Test
+    void findAll_shouldReturnEmptyPage_whenNoSessionsExist() {
 
-        @Test
-        void shouldReturnActiveSession() {
+        User user = mock(User.class);
 
-            when(authenticatedUser.get())
-                    .thenReturn(user);
+        when(user.getId()).thenReturn(1L);
+        when(authService.getCurrentUser()).thenReturn(user);
 
-            when(repository.findByUserIdAndStatus(
-                    user.getId(),
-                    SessionStatus.IN_PROGRESS
-            )).thenReturn(Optional.of(session));
+        Pageable pageable = PageRequest.of(0, 10);
 
-            StudySessionDTO result =
-                    service.findSessionInProgress();
+        when(repository.searchSessions(
+                pageable,
+                "",
+                1L
+        )).thenReturn(
+                new PageImpl<>(List.of(), pageable, 0)
+        );
 
-            assertNotNull(result);
+        Page<StudySessionResponseMinDTO> response =
+                service.findAll(pageable, "");
 
-            verify(repository)
-                    .findByUserIdAndStatus(
-                            1L,
-                            SessionStatus.IN_PROGRESS
-                    );
-        }
-
-        @Test
-        void shouldThrowResourceNotFoundExceptionWhenThereIsNoActiveSession() {
-
-            when(authenticatedUser.get())
-                    .thenReturn(user);
-
-            when(repository.findByUserIdAndStatus(
-                    1L,
-                    SessionStatus.IN_PROGRESS
-            )).thenReturn(Optional.empty());
-
-            assertThrows(
-                    ResourceNotFoundException.class,
-                    () -> service.findSessionInProgress()
-            );
-        }
+        assertNotNull(response);
+        assertTrue(response.isEmpty());
+        assertEquals(0, response.getTotalElements());
     }
 
-    @Nested
-    class EndSession {
+    @Test
+    void saveSession_shouldSaveSessionAndRevisions() {
 
-        @Test
-        void shouldEndSessionSuccessfully() {
+        User user = mock(User.class);
+        var subject = mock(io.github.wlailson.study_api.model.Subject.class);
+        var topic = mock(io.github.wlailson.study_api.model.Topic.class);
 
-            StudySessionEndDTO dto = new StudySessionEndDTO(
-                    "Spring Security",
-                    120L,
-                    15L,
-                    List.of()
-            );
+        when(authService.getCurrentUser()).thenReturn(user);
 
-            when(authenticatedUser.get())
-                    .thenReturn(user);
+        when(subjectService.getSubject(1L))
+                .thenReturn(subject);
 
-            when(repository.findByUserIdAndStatus(
-                    1L,
-                    SessionStatus.IN_PROGRESS
-            )).thenReturn(Optional.of(session));
+        when(topicService.getOrCreate("Spring Boot"))
+                .thenReturn(topic);
 
-            when(revisionRepository.saveAll(any()))
-                    .thenReturn(List.of());
+        StudySessionRequestDTO request =
+                new StudySessionRequestDTO(
+                        "Spring Boot",
+                        60L,
+                        10L,
+                        List.of()
+                );
 
-            StudySessionDTO result = service.endSession(dto);
+        StudySessionResponseDTO response =
+                service.saveSession(1L, request);
 
-            assertNotNull(result);
+        assertNotNull(response);
 
-            assertEquals(
-                    SessionStatus.COMPLETED,
-                    session.getStatus()
-            );
-
-            assertEquals(
-                    120L,
-                    session.getDurationInMinutes()
-            );
-
-            assertEquals(
-                    15L,
-                    session.getBreakTimeInMinutes()
-            );
-
-            assertEquals(
-                    "Spring Security",
-                    session.getTopic()
-            );
-
-            assertNotNull(session.getEndTime());
-
-            verify(revisionRepository)
-                    .saveAll(any());
-        }
-
-        @Test
-        void shouldThrowResourceNotFoundExceptionWhenThereIsNoActiveSession() {
-
-            StudySessionEndDTO dto = new StudySessionEndDTO(
-                    "Java",
-                    60L,
-                    10L,
-                    List.of()
-            );
-
-            when(authenticatedUser.get())
-                    .thenReturn(user);
-
-            when(repository.findByUserIdAndStatus(
-                    1L,
-                    SessionStatus.IN_PROGRESS
-            )).thenReturn(Optional.empty());
-
-            assertThrows(
-                    ResourceNotFoundException.class,
-                    () -> service.endSession(dto)
-            );
-
-            verify(revisionRepository, never())
-                    .saveAll(any());
-        }
-
-        @Test
-        void shouldSaveRevisionsWhenEndingSession() {
-
-            RevisionDTO revisionDTO = new RevisionDTO(
-                    null,
-                    LocalDate.of(2026, 9, 15)
-            );
-
-            StudySessionEndDTO dto = new StudySessionEndDTO(
-                    "Java",
-                    100L,
-                    20L,
-                    List.of(revisionDTO)
-            );
-
-            when(authenticatedUser.get())
-                    .thenReturn(user);
-
-            when(repository.findByUserIdAndStatus(
-                    1L,
-                    SessionStatus.IN_PROGRESS
-            )).thenReturn(Optional.of(session));
-
-            when(revisionRepository.saveAll(any()))
-                    .thenReturn(List.of());
-
-            service.endSession(dto);
-
-            ArgumentCaptor<List<Revision>> captor =
-                    ArgumentCaptor.forClass(List.class);
-
-            verify(revisionRepository)
-                    .saveAll(captor.capture());
-
-            List<Revision> revisions = captor.getValue();
-
-            assertEquals(1, revisions.size());
-
-            Revision revision = revisions.get(0);
-
-            assertEquals(
-                    LocalDate.of(2026, 9, 15),
-                    revision.getDate()
-            );
-
-            assertEquals(
-                    session,
-                    revision.getSession()
-            );
-        }
+        verify(subjectService).getSubject(1L);
+        verify(topicService).getOrCreate("Spring Boot");
+        verify(repository).save(any(StudySession.class));
+        verify(revisionService)
+                .saveRevisions(eq(request), any(StudySession.class));
     }
 
-    @Nested
-    class UpdateSession {
+    @Test
+    void saveSession_shouldUseAuthenticatedUser() {
 
-        @Test
-        void shouldUpdateSessionSuccessfully() {
+        User user = mock(User.class);
+        var subject = mock(io.github.wlailson.study_api.model.Subject.class);
+        var topic = mock(io.github.wlailson.study_api.model.Topic.class);
 
-            StudySessionUpdateDTO dto =
-                    new StudySessionUpdateDTO(
-                            "Spring Security",
-                            120L,
-                            15L
-                    );
+        when(authService.getCurrentUser()).thenReturn(user);
+        when(subjectService.getSubject(1L)).thenReturn(subject);
+        when(topicService.getOrCreate("Java")).thenReturn(topic);
 
-            when(repository.findById(1L))
-                    .thenReturn(Optional.of(session));
+        StudySessionRequestDTO request =
+                new StudySessionRequestDTO(
+                        "Java",
+                        120L,
+                        10L,
+                        List.of()
+                );
 
-            StudySessionDTO result =
-                    service.updateSession(1L, dto);
+        service.saveSession(1L, request);
 
-            assertNotNull(result);
-
-            assertEquals(
-                    "Spring Security",
-                    session.getTopic()
-            );
-
-            assertEquals(
-                    120L,
-                    session.getDurationInMinutes()
-            );
-
-            assertEquals(
-                    15L,
-                    session.getBreakTimeInMinutes()
-            );
-
-            verify(authenticatedUser)
-                    .validateOwnership(1L);
-        }
-
-        @Test
-        void shouldThrowResourceNotFoundExceptionWhenSessionDoesNotExist() {
-
-            StudySessionUpdateDTO dto =
-                    new StudySessionUpdateDTO(
-                            "Java",
-                            100L,
-                            10L
-                    );
-
-            when(repository.findById(1L))
-                    .thenReturn(Optional.empty());
-
-            assertThrows(
-                    ResourceNotFoundException.class,
-                    () -> service.updateSession(1L, dto)
-            );
-
-            verify(authenticatedUser, never())
-                    .validateOwnership(anyLong());
-        }
+        verify(repository).save(
+                argThat(session ->
+                        session.getUser() == user
+                                && session.getSubject() == subject
+                                && session.getTopic() == topic
+                                && session.getDurationInMinutes() == 120L
+                                && session.getBreakTimeInMinutes() == 10L
+                )
+        );
     }
 
-    @Nested
-    class DeleteSession {
+    @Test
+    void saveSession_shouldThrowException_whenSubjectDoesNotExist() {
 
-        @Test
-        void shouldDeleteSessionSuccessfully() {
+        User user = mock(User.class);
 
-            when(repository.findById(1L))
-                    .thenReturn(Optional.of(session));
+        when(authService.getCurrentUser()).thenReturn(user);
 
-            service.deleteSession(1L);
+        when(subjectService.getSubject(1L))
+                .thenThrow(new ResourceNotFoundException("Subject not found"));
 
-            verify(authenticatedUser)
-                    .validateOwnership(1L);
+        StudySessionRequestDTO request =
+                new StudySessionRequestDTO(
+                        "Java",
+                        60L,
+                        10L,
+                        List.of()
+                );
 
-            verify(repository)
-                    .deleteById(1L);
-        }
+        assertThrows(
+                ResourceNotFoundException.class,
+                () -> service.saveSession(1L, request)
+        );
 
-        @Test
-        void shouldThrowResourceNotFoundExceptionWhenSessionDoesNotExist() {
-
-            when(repository.findById(1L))
-                    .thenReturn(Optional.empty());
-
-            assertThrows(
-                    ResourceNotFoundException.class,
-                    () -> service.deleteSession(1L)
-            );
-
-            verify(repository, never())
-                    .deleteById(anyLong());
-
-            verify(authenticatedUser, never())
-                    .validateOwnership(anyLong());
-        }
+        verify(repository, never()).save(any());
+        verify(revisionService, never())
+                .saveRevisions(any(), any());
     }
 
+    @Test
+    void deleteSession_shouldDeleteSession() {
+
+        User user = mock(User.class);
+        StudySession session = mock(StudySession.class);
+        var topic = mock(io.github.wlailson.study_api.model.Topic.class);
+        var subject = mock(io.github.wlailson.study_api.model.Subject.class);
+
+        when(user.getId()).thenReturn(1L);
+        when(user.getName()).thenReturn("Maria");
+
+        when(session.getTopic()).thenReturn(topic);
+        when(session.getSubject()).thenReturn(subject);
+
+        when(topic.getName()).thenReturn("Spring Boot");
+        when(subject.getName()).thenReturn("Java");
+
+        when(authService.getCurrentUser()).thenReturn(user);
+
+        when(repository.findByIdAndUserId(1L, 1L))
+                .thenReturn(Optional.of(session));
+
+        service.deleteSession(1L);
+
+        verify(repository).delete(session);
+        verify(repository).flush();
+    }
+
+    @Test
+    void deleteSession_shouldThrowResourceNotFoundException_whenSessionDoesNotExist() {
+
+        User user = mock(User.class);
+
+        when(user.getId()).thenReturn(1L);
+        when(user.getName()).thenReturn("Maria");
+
+        when(authService.getCurrentUser()).thenReturn(user);
+
+        when(repository.findByIdAndUserId(1L, 1L))
+                .thenReturn(Optional.empty());
+
+        assertThrows(
+                ResourceNotFoundException.class,
+                () -> service.deleteSession(1L)
+        );
+
+        verify(repository, never()).delete(any());
+        verify(repository, never()).flush();
+    }
+
+    @Test
+    void deleteSession_shouldThrowConflictException_whenDeleteViolatesConstraint() {
+
+        User user = mock(User.class);
+        StudySession session = mock(StudySession.class);
+        var topic = mock(io.github.wlailson.study_api.model.Topic.class);
+        var subject = mock(io.github.wlailson.study_api.model.Subject.class);
+
+        when(user.getId()).thenReturn(1L);
+        when(user.getName()).thenReturn("Maria");
+
+        when(session.getTopic()).thenReturn(topic);
+        when(session.getSubject()).thenReturn(subject);
+
+        when(topic.getName()).thenReturn("Spring Boot");
+        when(subject.getName()).thenReturn("Java");
+
+        when(authService.getCurrentUser()).thenReturn(user);
+
+        when(repository.findByIdAndUserId(1L, 1L))
+                .thenReturn(Optional.of(session));
+
+        doThrow(new DataIntegrityViolationException("FK violation"))
+                .when(repository)
+                .flush();
+
+        assertThrows(
+                ConflictException.class,
+                () -> service.deleteSession(1L)
+        );
+
+        verify(repository).delete(session);
+        verify(repository).flush();
+    }
+
+    @Test
+    void findAllTopics_shouldReturnTopics() {
+
+        List<TopicMinProjection> topics =
+                List.of(mock(TopicMinProjection.class));
+
+        when(topicService.getAllTopics())
+                .thenReturn(topics);
+
+        List<TopicMinProjection> response =
+                service.findAllTopics();
+
+        assertNotNull(response);
+        assertEquals(1, response.size());
+        assertSame(topics, response);
+
+        verify(topicService).getAllTopics();
+    }
 }

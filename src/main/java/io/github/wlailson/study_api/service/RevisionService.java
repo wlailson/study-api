@@ -1,82 +1,102 @@
 package io.github.wlailson.study_api.service;
 
-import io.github.wlailson.study_api.authentication.AuthenticatedUser;
-import io.github.wlailson.study_api.dto.RevisionDTO;
-import io.github.wlailson.study_api.dto.RevisionListDTO;
-import io.github.wlailson.study_api.dto.RevisionUpdateDTO;
+import io.github.wlailson.study_api.dto.RevisionRequestDTO;
+import io.github.wlailson.study_api.dto.RevisionResponseDTO;
+import io.github.wlailson.study_api.dto.StudySessionRequestDTO;
 import io.github.wlailson.study_api.model.Revision;
+import io.github.wlailson.study_api.model.RevisionStatus;
+import io.github.wlailson.study_api.model.StudySession;
+import io.github.wlailson.study_api.model.User;
+import io.github.wlailson.study_api.projections.RevisionMinProjection;
 import io.github.wlailson.study_api.repository.RevisionRepository;
 import io.github.wlailson.study_api.service.exceptions.ResourceNotFoundException;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
+import java.util.List;
 
 @Service
 public class RevisionService {
 
 
     private final RevisionRepository repository;
-    private final AuthenticatedUser authenticatedUser;
+    private final AuthService authService;
 
     public RevisionService(
-            RevisionRepository repository,
-            AuthenticatedUser authenticatedUser) {
-
+            RevisionRepository repository, AuthService authService) {
         this.repository = repository;
-        this.authenticatedUser = authenticatedUser;
+        this.authService = authService;
     }
 
-    @Transactional(readOnly = true)
-    public RevisionDTO findById(Long id) {
 
+    @Transactional(readOnly = true)
+    public RevisionResponseDTO findById(Long id) {
         Revision revision = getRevision(id);
-
-        authenticatedUser.validateOwnership(
-                revision.getSession().getUser().getId()
-        );
-
-        return new RevisionDTO(revision);
+        return new RevisionResponseDTO(revision);
     }
 
-    @Transactional(readOnly = true)
-    public Page<RevisionListDTO> findAll(Pageable pageable) {
+    public List<RevisionMinProjection> findAll(RevisionStatus status) {
 
-        Long userId = authenticatedUser.get().getId();
+        Long userId = authService.getCurrentUser().getId();
 
-        return repository.searchAllByUserId(userId, pageable);
+        if (status == null) {
+            return repository.searchByUserId(userId);
+        }
+
+        return repository.searchByUserIdAndStatus(userId, status);
     }
 
     @Transactional
-    public RevisionDTO update(Long id, RevisionUpdateDTO dto) {
+    public RevisionResponseDTO conclude(Long id, RevisionRequestDTO request) {
 
-        Revision revision = getRevision(id);
+        Revision revision = getPendindRevision(id);
+        revision.setDurationInMinutes(request.durationInMinutes());
+        revision.setBreakTimeInMinutes(request.breakTimeInMinutes());
+        revision.setStatus(RevisionStatus.COMPLETED);
+        revision.setCompletedDate(LocalDate.now());
 
-        authenticatedUser.validateOwnership(
-                revision.getSession().getUser().getId()
-        );
-
-        revision.setDate(dto.date());
-
-        return new RevisionDTO(revision);
+        return new RevisionResponseDTO(revision);
     }
 
     @Transactional
     public void delete(Long id) {
-
         Revision revision = getRevision(id);
-
-        authenticatedUser.validateOwnership(
-                revision.getSession().getUser().getId()
-        );
-
         repository.delete(revision);
     }
 
-    private Revision getRevision(Long id) {
+    @Transactional
+    void saveRevisions(
+            StudySessionRequestDTO request,
+            StudySession session) {
 
-        return repository.findById(id)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Revision not found " + id));
+        User user = authService.getCurrentUser();
+
+        List<Revision> revisions = request.revisions().stream().map(revisionDTO -> {
+            Revision entity = new Revision();
+            entity.setStatus(RevisionStatus.PENDING);
+            entity.setScheduledDate(revisionDTO.scheduledDate());
+            entity.setSession(session);
+            entity.setUser(user);
+            return entity;
+        }).toList();
+
+        repository.saveAll(revisions);
+
+        session.getRevisions().addAll(revisions);
+    }
+
+    private Revision getRevision(Long id) {
+        User user = authService.getCurrentUser();
+        Revision revision = repository.findByIdAndUser_Id(id, user.getId()).orElseThrow(() ->
+                new ResourceNotFoundException("Revision not found ID: " + id + ", user: " + user.getName()));
+        return revision;
+    }
+
+    private Revision getPendindRevision(Long id) {
+        User user = authService.getCurrentUser();
+        Revision revision = repository.findByIdAndUser_IdAndStatus(id, user.getId(), RevisionStatus.PENDING)
+                .orElseThrow(() -> new ResourceNotFoundException("Pending revision not found ID: " + id + ", user: " + user.getName()));
+        return revision;
     }
 }

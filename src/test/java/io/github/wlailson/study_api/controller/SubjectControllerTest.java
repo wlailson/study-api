@@ -1,14 +1,13 @@
 package io.github.wlailson.study_api.controller;
 
-import static org.junit.jupiter.api.Assertions.*;
-
-import io.github.wlailson.study_api.dto.SubjectDTO;
+import io.github.wlailson.study_api.dto.SubjectRequestDTO;
+import io.github.wlailson.study_api.dto.SubjectResponseDTO;
+import io.github.wlailson.study_api.projections.SubjectMinProjection;
 import io.github.wlailson.study_api.service.SubjectService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
-import org.springframework.data.domain.*;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -16,14 +15,21 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
 
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(SubjectController.class)
-@WithMockUser(roles = "CLIENT")
 class SubjectControllerTest {
 
     @Autowired
@@ -33,15 +39,17 @@ class SubjectControllerTest {
     private SubjectService service;
 
     @Test
-    void deveBuscarSubjectPorId() throws Exception {
+    @WithMockUser(roles = "CLIENT")
+    void findById_shouldReturnSubject() throws Exception {
 
-        SubjectDTO dto = new SubjectDTO(
-                1L,
-                "Java"
-        );
+        SubjectResponseDTO response =
+                new SubjectResponseDTO(
+                        1L,
+                        "Java"
+                );
 
         when(service.findById(1L))
-                .thenReturn(dto);
+                .thenReturn(response);
 
         mockMvc.perform(
                         get("/subjects/1")
@@ -54,49 +62,63 @@ class SubjectControllerTest {
     }
 
     @Test
-    void deveBuscarTodosOsSubjects() throws Exception {
+    @WithMockUser(roles = "CLIENT")
+    void findAll_shouldReturnSubjects() throws Exception {
 
-        SubjectDTO dto = new SubjectDTO(
-                1L,
-                "Java"
-        );
+        SubjectMinProjection subject1 =
+                new SubjectProjection(
+                        1L,
+                        "Java"
+                );
 
-        Page<SubjectDTO> page =
-                new PageImpl<>(List.of(dto));
+        SubjectMinProjection subject2 =
+                new SubjectProjection(
+                        2L,
+                        "Spring"
+                );
 
-        when(service.findAll(any(Pageable.class)))
-                .thenReturn(page);
+        when(service.findAll())
+                .thenReturn(List.of(subject1, subject2));
 
         mockMvc.perform(
                         get("/subjects")
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content[0].id").value(1))
-                .andExpect(jsonPath("$.content[0].name").value("Java"));
+                .andExpect(jsonPath("$.length()").value(2))
 
-        verify(service).findAll(any(Pageable.class));
+                .andExpect(jsonPath("$[0].id").value(1))
+                .andExpect(jsonPath("$[0].name").value("Java"))
+
+                .andExpect(jsonPath("$[1].id").value(2))
+                .andExpect(jsonPath("$[1].name").value("Spring"));
+
+        verify(service).findAll();
     }
 
     @Test
-    void deveCriarSubject() throws Exception {
+    @WithMockUser(roles = "CLIENT")
+    void create_shouldReturnCreatedSubject() throws Exception {
 
-        SubjectDTO dto = new SubjectDTO(
-                1L,
-                "Java"
-        );
+        SubjectResponseDTO response =
+                new SubjectResponseDTO(
+                        1L,
+                        "Java"
+                );
 
-        when(service.create(any(SubjectDTO.class)))
-                .thenReturn(dto);
+        when(service.create(any(SubjectRequestDTO.class)))
+                .thenReturn(response);
+
+        String json = """
+                {
+                    "name": "Java"
+                }
+                """;
 
         mockMvc.perform(
                         post("/subjects")
                                 .with(csrf())
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content("""
-                                {
-                                    "name": "Java"
-                                }
-                                """)
+                                .content(json)
                 )
                 .andExpect(status().isCreated())
                 .andExpect(header().string(
@@ -106,48 +128,51 @@ class SubjectControllerTest {
                 .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.name").value("Java"));
 
-        verify(service).create(any(SubjectDTO.class));
+        verify(service).create(any(SubjectRequestDTO.class));
     }
 
     @Test
-    void deveAtualizarSubject() throws Exception {
+    @WithMockUser(roles = "CLIENT")
+    void update_shouldReturnUpdatedSubject() throws Exception {
 
-        SubjectDTO dto = new SubjectDTO(
-                1L,
-                "Spring Boot"
-        );
+        SubjectResponseDTO response =
+                new SubjectResponseDTO(
+                        1L,
+                        "Java Avançado"
+                );
 
         when(service.update(
                 eq(1L),
-                any(SubjectDTO.class)
-        )).thenReturn(dto);
+                any(SubjectRequestDTO.class)
+        )).thenReturn(response);
+
+        String json = """
+                {
+                    "name": "Java Avançado"
+                }
+                """;
 
         mockMvc.perform(
                         put("/subjects/1")
                                 .with(csrf())
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content("""
-                                {
-                                    "name": "Spring Boot"
-                                }
-                                """)
+                                .content(json)
                 )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.name").value("Spring Boot"));
+                .andExpect(jsonPath("$.name").value("Java Avançado"));
 
         verify(service).update(
                 eq(1L),
-                any(SubjectDTO.class)
+                any(SubjectRequestDTO.class)
         );
     }
 
     @Test
-    void deveDeletarSubject() throws Exception {
+    @WithMockUser(roles = "CLIENT")
+    void delete_shouldReturnNoContent() throws Exception {
 
-        doNothing()
-                .when(service)
-                .delete(1L);
+        doNothing().when(service).delete(1L);
 
         mockMvc.perform(
                         delete("/subjects/1")
@@ -156,5 +181,20 @@ class SubjectControllerTest {
                 .andExpect(status().isNoContent());
 
         verify(service).delete(1L);
+    }
+
+    private record SubjectProjection(
+            Long id,
+            String name
+    ) implements SubjectMinProjection {
+        @Override
+        public Long getId() {
+            return 0L;
+        }
+
+        @Override
+        public String getName() {
+            return "";
+        }
     }
 }
