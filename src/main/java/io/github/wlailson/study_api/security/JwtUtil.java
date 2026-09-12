@@ -6,6 +6,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
@@ -21,6 +22,9 @@ public class JwtUtil {
     private final String secretKey = "sua-chave-secreta-super-segura-que-deve-ser-bem-longa";
     Instant now = Instant.now();
 
+    @Value("${jwt.duration}")
+    private Integer jwtDurationSeconds;
+
 
 
     // Gera um token JWT com o nome de usuário e validade de 1 hora
@@ -29,7 +33,7 @@ public class JwtUtil {
                 .setSubject(user.getEmail()) // Define o nome de usuário como o assunto do token
                 .setIssuedAt(Date.from(now)) // Define a data e hora de emissão do token
                 .claim("roles",  user.getRoles().stream().map(Role::getAuthority).toArray(String[]::new))
-                .setExpiration(Date.from(now.plus(Duration.ofHours(1)))) // Define a data e hora de expiração (1 hora a partir da emissão)
+                .setExpiration(Date.from(now.plusSeconds(jwtDurationSeconds)))
                 .signWith(Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8)), SignatureAlgorithm.HS256) // Converte a chave secreta em bytes e assina o token com ela
                 .compact(); // Constrói o token JWT
     }
