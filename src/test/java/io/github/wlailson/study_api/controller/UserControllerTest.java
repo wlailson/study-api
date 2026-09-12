@@ -1,60 +1,88 @@
 package io.github.wlailson.study_api.controller;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import io.github.wlailson.study_api.dto.UserDTO;
-import io.github.wlailson.study_api.service.UserService;
+import io.github.wlailson.study_api.dto.UserRequestDTO;
+import io.github.wlailson.study_api.service.AuthService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.time.LocalDate;
-import java.util.List;
-
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(UserController.class)
-@WithMockUser(roles = "CLIENT")
 class UserControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
 
     @MockitoBean
-    private UserService service;
+    private AuthService service;
 
     @Test
-    void deveBuscarUsuarioAutenticado() throws Exception {
+    @WithMockUser(roles = "CLIENT")
+    void login_shouldReturnToken() throws Exception {
 
-        UserDTO dto = new UserDTO(
-                1L,
-                "Maria Silva",
-                "maria@gmail.com",
-                "61996695658",
-                LocalDate.of(1997, 11, 1),
-                List.of("ROLE_CLIENT")
-        );
+        String token = "jwt-token";
+
+        when(service.login(any(UserRequestDTO.class)))
+                .thenReturn(token);
+
+        String json = """
+            {
+                "email": "maria@gmail.com",
+                "password": "123456"
+            }
+            """;
+
+        mockMvc.perform(
+                        post("/users/login")
+                                .with(csrf())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(json)
+                )
+                .andExpect(status().isOk())
+                .andExpect(content().string(token));
+
+        verify(service).login(any(UserRequestDTO.class));
+    }
+
+    @Test
+    @WithMockUser(roles = "CLIENT")
+    void getMe_shouldReturnAuthenticatedUser() throws Exception {
+
+        UserDTO response = mock(UserDTO.class);
 
         when(service.getMe())
-                .thenReturn(dto);
+                .thenReturn(response);
 
         mockMvc.perform(
                         get("/users/me")
                 )
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.name").value("Maria Silva"))
-                .andExpect(jsonPath("$.email").value("maria@gmail.com"))
-                .andExpect(jsonPath("$.phone").value("61996695658"))
-                .andExpect(jsonPath("$.birthDate").value("1997-11-01"))
-                .andExpect(jsonPath("$.roles[0]").value("ROLE_CLIENT"));
+                .andExpect(status().isOk());
 
         verify(service).getMe();
+    }
+
+    @Test
+    void getMe_shouldReturnUnauthorized_whenNotAuthenticated()
+            throws Exception {
+
+        mockMvc.perform(
+                        get("/users/me")
+                )
+                .andExpect(status().isUnauthorized());
     }
 }

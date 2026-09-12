@@ -27,13 +27,16 @@ public class User implements UserDetails {
     private String password;
 
     @OneToMany(mappedBy = "user")
-    private List<Goal> goals = new ArrayList<>();
-
-    @OneToMany(mappedBy = "user")
     private Set<Subject> subjects = new HashSet<>();
 
     @OneToMany(mappedBy = "user")
+    private List<Topic> topics = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user")
     private List<StudySession> sessions = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user")
+    private List<Revision> revisions = new ArrayList<>();
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "tb_user_role",
@@ -44,15 +47,15 @@ public class User implements UserDetails {
     public User() {
     }
 
-    public User(Long id, String name, String email, String phone, LocalDate birthDate, String password) {
+    public User(Long id, String name, String email, String phone, LocalDate birthDate, String password, Set<Role> roles) {
         this.id = id;
         this.name = name;
         this.email = email;
         this.phone = phone;
         this.birthDate = birthDate;
         this.password = password;
+        this.roles = roles;
     }
-
 
     public Long getId() {
         return id;
@@ -136,15 +139,19 @@ public class User implements UserDetails {
         return roles;
     }
 
-    public List<Goal> getGoals() {
-        return goals;
-    }
-
     public Set<Subject> getSubjects() {
         return subjects;
     }
 
     public List<StudySession> getSessions() {
         return sessions;
+    }
+
+    public List<Topic> getTopics() {
+        return topics;
+    }
+
+    public List<Revision> getRevisions() {
+        return revisions;
     }
 }
