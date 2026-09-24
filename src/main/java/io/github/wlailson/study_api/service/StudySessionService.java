@@ -4,6 +4,7 @@ package io.github.wlailson.study_api.service;
 import io.github.wlailson.study_api.dto.StudySessionRequestDTO;
 import io.github.wlailson.study_api.dto.StudySessionResponseDTO;
 import io.github.wlailson.study_api.dto.StudySessionResponseMinDTO;
+import io.github.wlailson.study_api.dto.TopicMinDTO;
 import io.github.wlailson.study_api.model.StudySession;
 import io.github.wlailson.study_api.model.User;
 import io.github.wlailson.study_api.projections.StudySessionMinProjection;
@@ -11,6 +12,7 @@ import io.github.wlailson.study_api.projections.TopicMinProjection;
 import io.github.wlailson.study_api.repository.StudySessionRepository;
 import io.github.wlailson.study_api.service.exceptions.ConflictException;
 import io.github.wlailson.study_api.service.exceptions.ResourceNotFoundException;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -41,6 +43,10 @@ public class StudySessionService {
     }
 
 
+    @Cacheable(
+            value = "studySessions",
+            key = "@cacheKeyGenerator.findById(#id)"
+    )
     @Transactional(readOnly = true)
     public StudySessionResponseDTO findById(Long id) {
         StudySession session = loadEntity(id);
@@ -100,8 +106,9 @@ public class StudySessionService {
     }
 
     @Transactional(readOnly = true)
-    public List<TopicMinProjection> findAllTopics() {
-        return topicService.getAllTopics();
+    public List<TopicMinDTO> findAllTopics() {
+        List<TopicMinDTO> dtos = topicService.getAllTopics().stream().map(TopicMinDTO::new).toList();
+        return dtos;
     }
 
     private StudySession createEntity(Long subjectId, StudySessionRequestDTO request) {

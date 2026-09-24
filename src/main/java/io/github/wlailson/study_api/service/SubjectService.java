@@ -9,6 +9,7 @@ import io.github.wlailson.study_api.projections.SubjectMinProjection;
 import io.github.wlailson.study_api.repository.SubjectRepository;
 import io.github.wlailson.study_api.service.exceptions.ConflictException;
 import io.github.wlailson.study_api.service.exceptions.ResourceNotFoundException;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,12 +28,16 @@ public class SubjectService {
     }
 
 
+    @Cacheable(
+            value = "subjects",
+            key = "@cacheKeyGenerator.findById(#id)"
+    )
     @Transactional(readOnly = true)
     public SubjectResponseDTO findById(Long id) {
         Subject subject = getSubject(id);
         return new SubjectResponseDTO(subject);
     }
-
+    
     @Transactional(readOnly = true)
     public List<SubjectMinProjection> findAll() {
         return getAllSubjects();

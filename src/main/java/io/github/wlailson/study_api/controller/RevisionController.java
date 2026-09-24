@@ -1,5 +1,6 @@
 package io.github.wlailson.study_api.controller;
 
+import io.github.wlailson.study_api.dto.RevisionMinDTO;
 import io.github.wlailson.study_api.dto.RevisionRequestDTO;
 import io.github.wlailson.study_api.dto.RevisionResponseDTO;
 import io.github.wlailson.study_api.model.RevisionStatus;
@@ -100,7 +101,7 @@ public class RevisionController {
     )
     @PreAuthorize("hasAnyRole('ROLE_CLIENT', 'ROLE_ADMIN')")
     @GetMapping
-    public ResponseEntity<List<RevisionMinProjection>> findAll(
+    public ResponseEntity<List<RevisionMinDTO>> findAll(
             @RequestParam(required = false) RevisionStatus status
     ) {
         return ResponseEntity.ok(service.findAll(status));
