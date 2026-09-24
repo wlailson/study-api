@@ -3,13 +3,19 @@ package io.github.wlailson.study_api.controller;
 import io.github.wlailson.study_api.dto.StudySessionRequestDTO;
 import io.github.wlailson.study_api.dto.StudySessionResponseDTO;
 import io.github.wlailson.study_api.dto.StudySessionResponseMinDTO;
+import io.github.wlailson.study_api.security.JwtUtil;
+import io.github.wlailson.study_api.security.SecurityConfig;
 import io.github.wlailson.study_api.service.StudySessionService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.cache.CacheManager;
+import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -30,6 +36,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(StudySessionController.class)
+@Import(SecurityConfig.class)
 class StudySessionControllerTest {
 
     @Autowired
@@ -37,6 +44,15 @@ class StudySessionControllerTest {
 
     @MockitoBean
     private StudySessionService service;
+
+    @MockitoBean
+    private CacheManager cacheManager;
+
+    @MockitoBean
+    private JwtUtil jwtUtil;
+
+    @MockitoBean
+    private UserDetailsService userDetailsService;
 
     @Test
     @WithMockUser(roles = "CLIENT")
@@ -60,7 +76,7 @@ class StudySessionControllerTest {
                         LocalDate.of(2026, 9, 11)
                 );
 
-        PageImpl<StudySessionResponseMinDTO> page =
+        Page<StudySessionResponseMinDTO> page =
                 new PageImpl<>(
                         List.of(session1, session2),
                         PageRequest.of(0, 10),
@@ -109,7 +125,7 @@ class StudySessionControllerTest {
                         LocalDate.of(2026, 9, 10)
                 );
 
-        PageImpl<StudySessionResponseMinDTO> page =
+        Page<StudySessionResponseMinDTO> page =
                 new PageImpl<>(
                         List.of(session),
                         PageRequest.of(0, 10),
@@ -218,7 +234,9 @@ class StudySessionControllerTest {
     @WithMockUser(roles = "CLIENT")
     void deleteSession_shouldReturnNoContent() throws Exception {
 
-        doNothing().when(service).deleteSession(1L);
+        doNothing()
+                .when(service)
+                .deleteSession(1L);
 
         mockMvc.perform(
                         delete("/sessions/1")

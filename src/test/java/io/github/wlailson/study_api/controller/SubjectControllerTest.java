@@ -1,14 +1,19 @@
 package io.github.wlailson.study_api.controller;
 
+
 import io.github.wlailson.study_api.dto.SubjectRequestDTO;
 import io.github.wlailson.study_api.dto.SubjectResponseDTO;
 import io.github.wlailson.study_api.projections.SubjectMinProjection;
+import io.github.wlailson.study_api.security.JwtUtil;
+import io.github.wlailson.study_api.security.SecurityConfig;
 import io.github.wlailson.study_api.service.SubjectService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.cache.CacheManager;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -30,6 +35,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(SubjectController.class)
+@Import(SecurityConfig.class)
 class SubjectControllerTest {
 
     @Autowired
@@ -37,6 +43,15 @@ class SubjectControllerTest {
 
     @MockitoBean
     private SubjectService service;
+
+    @MockitoBean
+    private CacheManager cacheManager;
+
+    @MockitoBean
+    private JwtUtil jwtUtil;
+
+    @MockitoBean
+    private UserDetailsService userDetailsService;
 
     @Test
     @WithMockUser(roles = "CLIENT")
@@ -78,17 +93,20 @@ class SubjectControllerTest {
                 );
 
         when(service.findAll())
-                .thenReturn(List.of(subject1, subject2));
+                .thenReturn(
+                        List.of(
+                                subject1,
+                                subject2
+                        )
+                );
 
         mockMvc.perform(
                         get("/subjects")
                 )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(2))
-
                 .andExpect(jsonPath("$[0].id").value(1))
                 .andExpect(jsonPath("$[0].name").value("Java"))
-
                 .andExpect(jsonPath("$[1].id").value(2))
                 .andExpect(jsonPath("$[1].name").value("Spring"));
 
@@ -128,7 +146,8 @@ class SubjectControllerTest {
                 .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.name").value("Java"));
 
-        verify(service).create(any(SubjectRequestDTO.class));
+        verify(service)
+                .create(any(SubjectRequestDTO.class));
     }
 
     @Test
@@ -172,7 +191,9 @@ class SubjectControllerTest {
     @WithMockUser(roles = "CLIENT")
     void delete_shouldReturnNoContent() throws Exception {
 
-        doNothing().when(service).delete(1L);
+        doNothing()
+                .when(service)
+                .delete(1L);
 
         mockMvc.perform(
                         delete("/subjects/1")
@@ -180,21 +201,23 @@ class SubjectControllerTest {
                 )
                 .andExpect(status().isNoContent());
 
-        verify(service).delete(1L);
+        verify(service)
+                .delete(1L);
     }
 
     private record SubjectProjection(
             Long id,
             String name
     ) implements SubjectMinProjection {
+
         @Override
         public Long getId() {
-            return 0L;
+            return id;
         }
 
         @Override
         public String getName() {
-            return "";
+            return name;
         }
     }
 }
