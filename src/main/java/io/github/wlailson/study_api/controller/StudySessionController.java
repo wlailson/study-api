@@ -1,5 +1,6 @@
 package io.github.wlailson.study_api.controller;
 
+
 import io.github.wlailson.study_api.dto.StudySessionRequestDTO;
 import io.github.wlailson.study_api.dto.StudySessionResponseDTO;
 import io.github.wlailson.study_api.dto.StudySessionResponseMinDTO;
@@ -36,7 +37,7 @@ public class StudySessionController {
         this.service = service;
     }
 
-    @PreAuthorize("hasAnyRole('ROLE_CLIENT', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     @GetMapping
     @Operation(
             summary = "Lista as sessões de estudo",
@@ -81,7 +82,7 @@ public class StudySessionController {
         return ResponseEntity.ok(service.findAll(pageable, name));
     }
 
-    @PreAuthorize("hasAnyRole('ROLE_CLIENT', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     @GetMapping("/{id}")
     @Operation(
             summary = "Busca uma sessão de estudo pelo ID",
@@ -130,6 +131,7 @@ public class StudySessionController {
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     @PostMapping("/{subjectId}")
     @Operation(
             summary = "Cria uma sessão de estudo",
@@ -185,6 +187,7 @@ public class StudySessionController {
         );
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     @DeleteMapping("/{id}")
     @Operation(
             summary = "Exclui uma sessão de estudo",

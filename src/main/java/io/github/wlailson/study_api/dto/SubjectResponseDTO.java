@@ -3,6 +3,8 @@ package io.github.wlailson.study_api.dto;
 import io.github.wlailson.study_api.model.Subject;
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import java.io.Serializable;
+
 @Schema(description = "Dados de uma disciplina")
 public record SubjectResponseDTO(
 
@@ -17,7 +19,7 @@ public record SubjectResponseDTO(
                 example = "Java"
         )
         String name
-) {
+) implements Serializable {
 
     public SubjectResponseDTO(Subject entity) {
         this(

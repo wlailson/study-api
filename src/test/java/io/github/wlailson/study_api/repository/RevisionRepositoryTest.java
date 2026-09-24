@@ -372,7 +372,6 @@ class RevisionRepositoryTest {
                         + System.nanoTime()
                         + "@gmail.com"
         );
-        user.setPassword("123456");
         user.setPhone("61999999999");
         user.setBirthDate(LocalDate.of(2000, 1, 1));
 

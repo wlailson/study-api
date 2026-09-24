@@ -1,5 +1,6 @@
 package io.github.wlailson.study_api.controller;
 
+import io.github.wlailson.study_api.dto.RevisionMinDTO;
 import io.github.wlailson.study_api.dto.RevisionRequestDTO;
 import io.github.wlailson.study_api.dto.RevisionResponseDTO;
 import io.github.wlailson.study_api.model.RevisionStatus;
@@ -56,7 +57,7 @@ public class RevisionController {
                     content = @Content
             )
     })
-    @PreAuthorize("hasAnyRole('ROLE_CLIENT', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     @GetMapping("/{id}")
     public ResponseEntity<RevisionResponseDTO> findById(
             @Parameter(
@@ -98,9 +99,9 @@ public class RevisionController {
             schema = @Schema(implementation = RevisionStatus.class),
             in = ParameterIn.QUERY
     )
-    @PreAuthorize("hasAnyRole('ROLE_CLIENT', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     @GetMapping
-    public ResponseEntity<List<RevisionMinProjection>> findAll(
+    public ResponseEntity<List<RevisionMinDTO>> findAll(
             @RequestParam(required = false) RevisionStatus status
     ) {
         return ResponseEntity.ok(service.findAll(status));
@@ -131,7 +132,7 @@ public class RevisionController {
                     content = @Content
             )
     })
-    @PreAuthorize("hasAnyRole('ROLE_CLIENT', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     @PutMapping("/{id}")
     public ResponseEntity<RevisionResponseDTO> conclude(
             @Parameter(
@@ -172,7 +173,7 @@ public class RevisionController {
                     content = @Content
             )
     })
-    @PreAuthorize("hasAnyRole('ROLE_CLIENT', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(
             @Parameter(

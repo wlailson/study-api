@@ -36,6 +36,7 @@ public class TopicService {
     }
 
 
+
     @Transactional(readOnly = true)
     List<TopicMinProjection> getAllTopics() {
         return repository.searchTopicByUserId(authService.getCurrentUser().getId());

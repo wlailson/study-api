@@ -1,5 +1,6 @@
 package io.github.wlailson.study_api.controller;
 
+import io.github.wlailson.study_api.dto.SubjectMinDTO;
 import io.github.wlailson.study_api.dto.SubjectRequestDTO;
 import io.github.wlailson.study_api.dto.SubjectResponseDTO;
 import io.github.wlailson.study_api.projections.SubjectMinProjection;
@@ -37,7 +38,7 @@ public class SubjectController {
         this.service = service;
     }
 
-    @PreAuthorize("hasAnyRole('ROLE_CLIENT', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     @GetMapping
     @Operation(
             summary = "Lista as disciplinas",
@@ -59,14 +60,14 @@ public class SubjectController {
                     content = @Content
             )
     })
-    public ResponseEntity<List<SubjectMinProjection>> findAll() {
+    public ResponseEntity<List<SubjectMinDTO>> findAll() {
 
-        List<SubjectMinProjection> response = service.findAll();
+        List<SubjectMinDTO> response = service.findAll();
 
         return ResponseEntity.ok(response);
     }
 
-    @PreAuthorize("hasAnyRole('ROLE_CLIENT', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     @GetMapping("/{id}")
     @Operation(
             summary = "Busca uma disciplina pelo ID",
@@ -117,7 +118,7 @@ public class SubjectController {
 
 
 
-    @PreAuthorize("hasAnyRole('ROLE_CLIENT', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     @PostMapping
     @Operation(
             summary = "Cria uma disciplina",
@@ -177,7 +178,7 @@ public class SubjectController {
                 .body(subject);
     }
 
-    @PreAuthorize("hasAnyRole('ROLE_CLIENT', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     @PutMapping("/{id}")
     @Operation(
             summary = "Atualiza uma disciplina",
@@ -243,7 +244,7 @@ public class SubjectController {
         return ResponseEntity.ok(subject);
     }
 
-    @PreAuthorize("hasAnyRole('ROLE_CLIENT', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     @DeleteMapping("/{id}")
     @Operation(
             summary = "Exclui uma disciplina",

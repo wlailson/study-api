@@ -1,5 +1,6 @@
 package io.github.wlailson.study_api.dto;
 
+import java.io.Serializable;
 import java.time.LocalDate;
 
 public record StudySessionResponseMinDTO(
@@ -8,6 +9,6 @@ public record StudySessionResponseMinDTO(
         String topic,
         Long durationInMinutes,
         LocalDate date
-) {
+)implements Serializable {
 
 }

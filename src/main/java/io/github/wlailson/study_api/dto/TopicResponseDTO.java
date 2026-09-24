@@ -2,7 +2,9 @@ package io.github.wlailson.study_api.dto;
 
 import io.github.wlailson.study_api.model.Topic;
 
-public record TopicResponseDTO(Long id, String name) {
+import java.io.Serializable;
+
+public record TopicResponseDTO(Long id, String name) implements Serializable {
 
     public TopicResponseDTO(Topic entity) {
         this(entity.getId(), entity.getName());

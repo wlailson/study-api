@@ -1,6 +1,7 @@
 package io.github.wlailson.study_api.service;
 
 
+import io.github.wlailson.study_api.dto.SubjectMinDTO;
 import io.github.wlailson.study_api.dto.SubjectRequestDTO;
 import io.github.wlailson.study_api.dto.SubjectResponseDTO;
 import io.github.wlailson.study_api.model.Subject;
@@ -9,6 +10,7 @@ import io.github.wlailson.study_api.projections.SubjectMinProjection;
 import io.github.wlailson.study_api.repository.SubjectRepository;
 import io.github.wlailson.study_api.service.exceptions.ConflictException;
 import io.github.wlailson.study_api.service.exceptions.ResourceNotFoundException;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,14 +29,16 @@ public class SubjectService {
     }
 
 
+    @Cacheable(value = "subject", key = "#id")
     @Transactional(readOnly = true)
     public SubjectResponseDTO findById(Long id) {
         Subject subject = getSubject(id);
         return new SubjectResponseDTO(subject);
     }
 
+    @Cacheable(value = "subjects")
     @Transactional(readOnly = true)
-    public List<SubjectMinProjection> findAll() {
+    public List<SubjectMinDTO> findAll() {
         return getAllSubjects();
     }
 
@@ -76,9 +80,10 @@ public class SubjectService {
         return subject;
     }
 
-    protected List<SubjectMinProjection> getAllSubjects() {
+    protected List<SubjectMinDTO> getAllSubjects() {
         User user = authService.getCurrentUser();
-        return repository.searchSubjectByUserId(user.getId());
+        List<SubjectMinDTO> list = repository.searchSubjectByUserId(user.getId()).stream().map(SubjectMinDTO::new).toList();
+        return list;
     }
 
     protected Subject getOrCreate(String subjectName) {

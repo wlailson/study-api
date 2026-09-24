@@ -3,6 +3,8 @@ package io.github.wlailson.study_api.dto;
 import io.github.wlailson.study_api.model.User;
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import java.io.Serializable;
+
 public record ClientDTO(
 
         @Schema(description = "ID do cliente",
@@ -13,7 +15,7 @@ public record ClientDTO(
                 example = "Maria Silva")
         String name
 
-) {
+) implements Serializable {
 
     public ClientDTO(User entity) {
         this(entity.getId(), entity.getName());

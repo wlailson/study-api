@@ -1,62 +1,46 @@
 -- ============================================================
--- ROLES
--- ============================================================
-
-INSERT INTO tb_role (authority)
-VALUES ('ROLE_CLIENT');
-
-INSERT INTO tb_role (authority)
-VALUES ('ROLE_ADMIN');
-
-
--- ============================================================
 -- USERS
 -- ============================================================
 
-INSERT INTO tb_user (name, email, password, phone, birth_date)
-VALUES ('Maria Silva',
-        'maria@gmail.com',
-        '$2a$12$XNDYRKncWl1260k8BNBIdOC5BexfIu/fWscpjYbRL2xoLUVR/6KLu',
-        '61996695658',
-        '1997-11-01');
+INSERT INTO tb_user
+(external_id, name, email, phone, birth_date)
+VALUES (
+    '80931fdc-0138-41c4-b32f-c1a654fdc468',
+    'Maria Silva',
+    'maria@gmail.com',
+    '61996695658',
+    '1997-11-01'
+);
 
-INSERT INTO tb_user (name, email, password, phone, birth_date)
-VALUES ('João Santos',
-        'joao@gmail.com',
-        '$2a$12$XNDYRKncWl1260k8BNBIdOC5BexfIu/fWscpjYbRL2xoLUVR/6KLu',
-        '61991234567',
-        '1995-05-15');
+INSERT INTO tb_user
+(external_id, name, email, phone, birth_date)
+VALUES (
+    'a7f4c2d1-91e6-4b38-8a25-72d4e9f10361',
+    'João Santos',
+    'joao@gmail.com',
+    '61991234567',
+    '1995-05-15'
+);
 
-INSERT INTO tb_user (name, email, password, phone, birth_date)
-VALUES ('Ana Oliveira',
-        'ana@gmail.com',
-        '$2a$12$XNDYRKncWl1260k8BNBIdOC5BexfIu/fWscpjYbRL2xoLUVR/6KLu',
-        '61999887766',
-        '2000-08-20');
+INSERT INTO tb_user
+(external_id, name, email, phone, birth_date)
+VALUES (
+    '5c91e7b2-3a64-4f18-bd29-86e5c0472a13',
+    'Ana Oliveira',
+    'ana@gmail.com',
+    '61999887766',
+    '2000-08-20'
+);
 
-INSERT INTO tb_user (name, email, password, phone, birth_date)
-VALUES ('Carlos Almeida',
-        'carlos@gmail.com',
-        '$2a$12$XNDYRKncWl1260k8BNBIdOC5BexfIu/fWscpjYbRL2xoLUVR/6KLu',
-        '61997766554',
-        '1992-03-10');
-
-
--- ============================================================
--- USER ROLES
--- ============================================================
-
-INSERT INTO tb_user_role (user_id, role_id)
-VALUES (1, 1);
-
-INSERT INTO tb_user_role (user_id, role_id)
-VALUES (2, 1);
-
-INSERT INTO tb_user_role (user_id, role_id)
-VALUES (3, 1);
-
-INSERT INTO tb_user_role (user_id, role_id)
-VALUES (4, 2);
+INSERT INTO tb_user
+(external_id, name, email, phone, birth_date)
+VALUES (
+    'd82f6a41-7c35-49e0-a916-53b8d2741f06',
+    'Carlos Almeida',
+    'carlos@gmail.com',
+    '61997766554',
+    '1992-03-10'
+);
 
 
 -- ============================================================
@@ -250,10 +234,6 @@ VALUES ('AWS EC2', 4);
 -- STUDY SESSIONS - MARIA
 -- ============================================================
 
--- ============================================================
--- STUDY SESSIONS - MARIA
--- ============================================================
-
 INSERT INTO tb_study_session
 (user_id, subject_id, topic_id, duration_in_minutes, break_time_in_minutes, date)
 VALUES (1, 1, 1, 60, 10, '2026-09-07');
@@ -397,6 +377,7 @@ INSERT INTO tb_study_session
 (user_id, subject_id, topic_id, duration_in_minutes, break_time_in_minutes, date)
 VALUES (4, 16, 32, 60, 10, '2026-09-11');
 
+
 -- ============================================================
 -- REVISIONS - MARIA
 -- ============================================================
@@ -467,6 +448,7 @@ VALUES ('2026-09-14', NULL, NULL, NULL, 'PENDING', 8, 1);
 INSERT INTO tb_revision
 (scheduled_date, completed_date, duration_in_minutes, break_time_in_minutes, status, session_id, user_id)
 VALUES ('2026-09-09', '2026-09-09', 30, 5, 'COMPLETED', 9, 1);
+
 
 -- ============================================================
 -- REVISIONS - JOÃO
@@ -580,4 +562,3 @@ VALUES ('2026-09-20', NULL, NULL, NULL, 'PENDING', 30, 4);
 INSERT INTO tb_revision
 (scheduled_date, completed_date, duration_in_minutes, break_time_in_minutes, status, session_id, user_id)
 VALUES ('2026-09-21', NULL, NULL, NULL, 'PENDING', 31, 4);
-

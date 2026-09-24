@@ -11,6 +11,7 @@ import io.github.wlailson.study_api.projections.TopicMinProjection;
 import io.github.wlailson.study_api.repository.StudySessionRepository;
 import io.github.wlailson.study_api.service.exceptions.ConflictException;
 import io.github.wlailson.study_api.service.exceptions.ResourceNotFoundException;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -41,12 +42,14 @@ public class StudySessionService {
     }
 
 
+    @Cacheable(value = "studySessions", key = "#id")
     @Transactional(readOnly = true)
     public StudySessionResponseDTO findById(Long id) {
         StudySession session = loadEntity(id);
         return new StudySessionResponseDTO(session);
     }
 
+    @Cacheable(value = "studysessions")
     @Transactional(readOnly = true)
     public Page<StudySessionResponseMinDTO> findAll(Pageable pageable, String name) {
         User user = authService.getCurrentUser();
@@ -99,6 +102,7 @@ public class StudySessionService {
 
     }
 
+    @Cacheable(value = "topics")
     @Transactional(readOnly = true)
     public List<TopicMinProjection> findAllTopics() {
         return topicService.getAllTopics();
@@ -121,7 +125,9 @@ public class StudySessionService {
     private StudySession loadEntity(Long id) {
         User user = authService.getCurrentUser();
         StudySession session = repository.findByIdAndUserId(id, user.getId())
-                .orElseThrow(() -> new ResourceNotFoundException("Session not found ID: " + id + ", user: " + user.getName()));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Session not found ID: " + id)
+                );
 
         return session;
     }

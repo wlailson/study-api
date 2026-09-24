@@ -3,6 +3,7 @@ package io.github.wlailson.study_api.dto;
 import io.github.wlailson.study_api.model.StudySession;
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import java.io.Serializable;
 import java.util.List;
 
 public record StudySessionResponseDTO(
@@ -31,7 +32,7 @@ public record StudySessionResponseDTO(
 
         @Schema(description = "Lista de revisões associadas à sessão")
         List<RevisionResponseDTO> revisions
-) {
+) implements Serializable {
 
     public StudySessionResponseDTO(StudySession entity) {
         this(entity.getId(),
