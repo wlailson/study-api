@@ -1,6 +1,7 @@
 package io.github.wlailson.study_api.service;
 
 import io.github.wlailson.study_api.repository.UserRepository;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -17,6 +18,10 @@ public class UserService implements UserDetailsService {
 
     // Implementação do método para carregar detalhes do usuário pelo e-mail
     @Override
+    @Cacheable(
+            value = "users",
+            key = "@cacheKeyGenerator.findUserByEmail(#email)"
+    )
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         return repository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado: " + email));

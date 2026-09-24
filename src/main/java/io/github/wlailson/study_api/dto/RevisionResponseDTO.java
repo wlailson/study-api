@@ -4,6 +4,7 @@ import io.github.wlailson.study_api.model.Revision;
 import io.github.wlailson.study_api.model.RevisionStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import java.io.Serializable;
 import java.time.LocalDate;
 
 public record RevisionResponseDTO(
@@ -52,7 +53,7 @@ public record RevisionResponseDTO(
         )
         RevisionStatus status
 
-) {
+) implements Serializable {
 
     public RevisionResponseDTO(Revision entity) {
         this(

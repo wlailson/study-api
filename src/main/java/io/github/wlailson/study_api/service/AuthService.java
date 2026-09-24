@@ -5,6 +5,7 @@ import io.github.wlailson.study_api.dto.UserRequestDTO;
 import io.github.wlailson.study_api.model.User;
 import io.github.wlailson.study_api.security.JwtUtil;
 import io.github.wlailson.study_api.service.exceptions.ForbiddenException;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -25,6 +26,7 @@ public class AuthService {
         this.jwtUtil = jwtUtil;
     }
 
+    @Cacheable(value = "users", key = "#root.methodName")
     @Transactional(readOnly = true)
     public UserDTO getMe(){
         return new UserDTO(getCurrentUser());

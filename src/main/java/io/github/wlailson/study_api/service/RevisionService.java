@@ -1,5 +1,6 @@
 package io.github.wlailson.study_api.service;
 
+import io.github.wlailson.study_api.dto.RevisionMinDTO;
 import io.github.wlailson.study_api.dto.RevisionRequestDTO;
 import io.github.wlailson.study_api.dto.RevisionResponseDTO;
 import io.github.wlailson.study_api.dto.StudySessionRequestDTO;
@@ -10,6 +11,7 @@ import io.github.wlailson.study_api.model.User;
 import io.github.wlailson.study_api.projections.RevisionMinProjection;
 import io.github.wlailson.study_api.repository.RevisionRepository;
 import io.github.wlailson.study_api.service.exceptions.ResourceNotFoundException;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,21 +32,27 @@ public class RevisionService {
     }
 
 
+    @Cacheable(
+            value = "studySessions",
+            key = "@cacheKeyGenerator.findById(#id)"
+    )
     @Transactional(readOnly = true)
     public RevisionResponseDTO findById(Long id) {
         Revision revision = getRevision(id);
         return new RevisionResponseDTO(revision);
     }
 
-    public List<RevisionMinProjection> findAll(RevisionStatus status) {
+    @Transactional(readOnly = true)
+    public List<RevisionMinDTO> findAll(RevisionStatus status) {
 
         Long userId = authService.getCurrentUser().getId();
 
         if (status == null) {
-            return repository.searchByUserId(userId);
+            return repository.searchByUserId(userId).stream().map(RevisionMinDTO::new).toList();
         }
 
-        return repository.searchByUserIdAndStatus(userId, status);
+        List<RevisionMinDTO> minDTOS = repository.searchByUserIdAndStatus(userId, status).stream().map(RevisionMinDTO::new).toList();
+        return minDTOS;
     }
 
     @Transactional

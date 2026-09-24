@@ -3,6 +3,7 @@ package io.github.wlailson.study_api.service;
 import io.github.wlailson.study_api.dto.StudySessionRequestDTO;
 import io.github.wlailson.study_api.dto.StudySessionResponseDTO;
 import io.github.wlailson.study_api.dto.StudySessionResponseMinDTO;
+import io.github.wlailson.study_api.dto.TopicMinDTO;
 import io.github.wlailson.study_api.model.StudySession;
 import io.github.wlailson.study_api.model.User;
 import io.github.wlailson.study_api.projections.StudySessionMinProjection;
@@ -75,12 +76,14 @@ class StudySessionServiceTest {
         when(subject.getId()).thenReturn(1L);
         when(subject.getName()).thenReturn("Java");
 
-        when(authService.getCurrentUser()).thenReturn(user);
+        when(authService.getCurrentUser())
+                .thenReturn(user);
 
         when(repository.findByIdAndUserId(1L, 1L))
                 .thenReturn(Optional.of(session));
 
-        StudySessionResponseDTO response = service.findById(1L);
+        StudySessionResponseDTO response =
+                service.findById(1L);
 
         assertNotNull(response);
         assertEquals(1L, response.id());
@@ -99,7 +102,8 @@ class StudySessionServiceTest {
         when(user.getId()).thenReturn(1L);
         when(user.getName()).thenReturn("Maria");
 
-        when(authService.getCurrentUser()).thenReturn(user);
+        when(authService.getCurrentUser())
+                .thenReturn(user);
 
         when(repository.findByIdAndUserId(1L, 1L))
                 .thenReturn(Optional.empty());
@@ -109,7 +113,8 @@ class StudySessionServiceTest {
                 () -> service.findById(1L)
         );
 
-        verify(repository).findByIdAndUserId(1L, 1L);
+        verify(repository)
+                .findByIdAndUserId(1L, 1L);
     }
 
     @Test
@@ -118,10 +123,11 @@ class StudySessionServiceTest {
         User user = mock(User.class);
 
         when(user.getId()).thenReturn(1L);
+        when(authService.getCurrentUser())
+                .thenReturn(user);
 
-        when(authService.getCurrentUser()).thenReturn(user);
-
-        Pageable pageable = PageRequest.of(0, 10);
+        Pageable pageable =
+                PageRequest.of(0, 10);
 
         StudySessionMinProjection projection =
                 mock(StudySessionMinProjection.class);
@@ -129,35 +135,62 @@ class StudySessionServiceTest {
         when(projection.getId()).thenReturn(1L);
         when(projection.getSubject()).thenReturn("Java");
         when(projection.getTopic()).thenReturn("Spring Boot");
-        when(projection.getDurationInMinutes()).thenReturn(60L);
+        when(projection.getDurationInMinutes())
+                .thenReturn(60L);
         when(projection.getDate())
-                .thenReturn(LocalDate.of(2026, 9, 10));
+                .thenReturn(
+                        LocalDate.of(2026, 9, 10)
+                );
 
         Page<StudySessionMinProjection> page =
-                new PageImpl<>(List.of(projection), pageable, 1);
+                new PageImpl<>(
+                        List.of(projection),
+                        pageable,
+                        1
+                );
 
-        when(repository.searchSessions(pageable, "", 1L))
-                .thenReturn(page);
+        when(repository.searchSessions(
+                pageable,
+                "",
+                1L
+        )).thenReturn(page);
 
         Page<StudySessionResponseMinDTO> response =
                 service.findAll(pageable, "");
 
         assertNotNull(response);
-        assertEquals(1, response.getTotalElements());
+        assertEquals(
+                1,
+                response.getTotalElements()
+        );
 
-        StudySessionResponseMinDTO dto = response.getContent().get(0);
+        StudySessionResponseMinDTO dto =
+                response.getContent().get(0);
 
         assertEquals(1L, dto.id());
-        assertEquals("Java", dto.subjectName());
-        assertEquals("Spring Boot", dto.topic());
-        assertEquals(60L, dto.durationInMinutes());
+        assertEquals(
+                "Java",
+                dto.subjectName()
+        );
+        assertEquals(
+                "Spring Boot",
+                dto.topic()
+        );
+        assertEquals(
+                60L,
+                dto.durationInMinutes()
+        );
         assertEquals(
                 LocalDate.of(2026, 9, 10),
                 dto.date()
         );
 
         verify(repository)
-                .searchSessions(pageable, "", 1L);
+                .searchSessions(
+                        pageable,
+                        "",
+                        1L
+                );
     }
 
     @Test
@@ -166,12 +199,18 @@ class StudySessionServiceTest {
         User user = mock(User.class);
 
         when(user.getId()).thenReturn(1L);
-        when(authService.getCurrentUser()).thenReturn(user);
+        when(authService.getCurrentUser())
+                .thenReturn(user);
 
-        Pageable pageable = PageRequest.of(0, 10);
+        Pageable pageable =
+                PageRequest.of(0, 10);
 
         Page<StudySessionMinProjection> page =
-                new PageImpl<>(List.of(), pageable, 0);
+                new PageImpl<>(
+                        List.of(),
+                        pageable,
+                        0
+                );
 
         when(repository.searchSessions(
                 pageable,
@@ -180,13 +219,20 @@ class StudySessionServiceTest {
         )).thenReturn(page);
 
         Page<StudySessionResponseMinDTO> response =
-                service.findAll(pageable, "Java");
+                service.findAll(
+                        pageable,
+                        "Java"
+                );
 
         assertNotNull(response);
         assertTrue(response.isEmpty());
 
         verify(repository)
-                .searchSessions(pageable, "Java", 1L);
+                .searchSessions(
+                        pageable,
+                        "Java",
+                        1L
+                );
     }
 
     @Test
@@ -195,34 +241,49 @@ class StudySessionServiceTest {
         User user = mock(User.class);
 
         when(user.getId()).thenReturn(1L);
-        when(authService.getCurrentUser()).thenReturn(user);
+        when(authService.getCurrentUser())
+                .thenReturn(user);
 
-        Pageable pageable = PageRequest.of(0, 10);
+        Pageable pageable =
+                PageRequest.of(0, 10);
 
         when(repository.searchSessions(
                 pageable,
                 "",
                 1L
         )).thenReturn(
-                new PageImpl<>(List.of(), pageable, 0)
+                new PageImpl<>(
+                        List.of(),
+                        pageable,
+                        0
+                )
         );
 
         Page<StudySessionResponseMinDTO> response =
-                service.findAll(pageable, "");
+                service.findAll(
+                        pageable,
+                        ""
+                );
 
         assertNotNull(response);
         assertTrue(response.isEmpty());
-        assertEquals(0, response.getTotalElements());
+        assertEquals(
+                0,
+                response.getTotalElements()
+        );
     }
 
     @Test
     void saveSession_shouldSaveSessionAndRevisions() {
 
         User user = mock(User.class);
-        var subject = mock(io.github.wlailson.study_api.model.Subject.class);
-        var topic = mock(io.github.wlailson.study_api.model.Topic.class);
+        var subject =
+                mock(io.github.wlailson.study_api.model.Subject.class);
+        var topic =
+                mock(io.github.wlailson.study_api.model.Topic.class);
 
-        when(authService.getCurrentUser()).thenReturn(user);
+        when(authService.getCurrentUser())
+                .thenReturn(user);
 
         when(subjectService.getSubject(1L))
                 .thenReturn(subject);
@@ -239,27 +300,46 @@ class StudySessionServiceTest {
                 );
 
         StudySessionResponseDTO response =
-                service.saveSession(1L, request);
+                service.saveSession(
+                        1L,
+                        request
+                );
 
         assertNotNull(response);
 
-        verify(subjectService).getSubject(1L);
-        verify(topicService).getOrCreate("Spring Boot");
-        verify(repository).save(any(StudySession.class));
+        verify(subjectService)
+                .getSubject(1L);
+
+        verify(topicService)
+                .getOrCreate("Spring Boot");
+
+        verify(repository)
+                .save(any(StudySession.class));
+
         verify(revisionService)
-                .saveRevisions(eq(request), any(StudySession.class));
+                .saveRevisions(
+                        eq(request),
+                        any(StudySession.class)
+                );
     }
 
     @Test
     void saveSession_shouldUseAuthenticatedUser() {
 
         User user = mock(User.class);
-        var subject = mock(io.github.wlailson.study_api.model.Subject.class);
-        var topic = mock(io.github.wlailson.study_api.model.Topic.class);
+        var subject =
+                mock(io.github.wlailson.study_api.model.Subject.class);
+        var topic =
+                mock(io.github.wlailson.study_api.model.Topic.class);
 
-        when(authService.getCurrentUser()).thenReturn(user);
-        when(subjectService.getSubject(1L)).thenReturn(subject);
-        when(topicService.getOrCreate("Java")).thenReturn(topic);
+        when(authService.getCurrentUser())
+                .thenReturn(user);
+
+        when(subjectService.getSubject(1L))
+                .thenReturn(subject);
+
+        when(topicService.getOrCreate("Java"))
+                .thenReturn(topic);
 
         StudySessionRequestDTO request =
                 new StudySessionRequestDTO(
@@ -269,7 +349,10 @@ class StudySessionServiceTest {
                         List.of()
                 );
 
-        service.saveSession(1L, request);
+        service.saveSession(
+                1L,
+                request
+        );
 
         verify(repository).save(
                 argThat(session ->
@@ -287,10 +370,15 @@ class StudySessionServiceTest {
 
         User user = mock(User.class);
 
-        when(authService.getCurrentUser()).thenReturn(user);
+        when(authService.getCurrentUser())
+                .thenReturn(user);
 
         when(subjectService.getSubject(1L))
-                .thenThrow(new ResourceNotFoundException("Subject not found"));
+                .thenThrow(
+                        new ResourceNotFoundException(
+                                "Subject not found"
+                        )
+                );
 
         StudySessionRequestDTO request =
                 new StudySessionRequestDTO(
@@ -302,10 +390,15 @@ class StudySessionServiceTest {
 
         assertThrows(
                 ResourceNotFoundException.class,
-                () -> service.saveSession(1L, request)
+                () -> service.saveSession(
+                        1L,
+                        request
+                )
         );
 
-        verify(repository, never()).save(any());
+        verify(repository, never())
+                .save(any());
+
         verify(revisionService, never())
                 .saveRevisions(any(), any());
     }
@@ -314,9 +407,14 @@ class StudySessionServiceTest {
     void deleteSession_shouldDeleteSession() {
 
         User user = mock(User.class);
-        StudySession session = mock(StudySession.class);
-        var topic = mock(io.github.wlailson.study_api.model.Topic.class);
-        var subject = mock(io.github.wlailson.study_api.model.Subject.class);
+        StudySession session =
+                mock(StudySession.class);
+
+        var topic =
+                mock(io.github.wlailson.study_api.model.Topic.class);
+
+        var subject =
+                mock(io.github.wlailson.study_api.model.Subject.class);
 
         when(user.getId()).thenReturn(1L);
         when(user.getName()).thenReturn("Maria");
@@ -324,18 +422,25 @@ class StudySessionServiceTest {
         when(session.getTopic()).thenReturn(topic);
         when(session.getSubject()).thenReturn(subject);
 
-        when(topic.getName()).thenReturn("Spring Boot");
-        when(subject.getName()).thenReturn("Java");
+        when(topic.getName())
+                .thenReturn("Spring Boot");
 
-        when(authService.getCurrentUser()).thenReturn(user);
+        when(subject.getName())
+                .thenReturn("Java");
+
+        when(authService.getCurrentUser())
+                .thenReturn(user);
 
         when(repository.findByIdAndUserId(1L, 1L))
                 .thenReturn(Optional.of(session));
 
         service.deleteSession(1L);
 
-        verify(repository).delete(session);
-        verify(repository).flush();
+        verify(repository)
+                .delete(session);
+
+        verify(repository)
+                .flush();
     }
 
     @Test
@@ -346,7 +451,8 @@ class StudySessionServiceTest {
         when(user.getId()).thenReturn(1L);
         when(user.getName()).thenReturn("Maria");
 
-        when(authService.getCurrentUser()).thenReturn(user);
+        when(authService.getCurrentUser())
+                .thenReturn(user);
 
         when(repository.findByIdAndUserId(1L, 1L))
                 .thenReturn(Optional.empty());
@@ -356,17 +462,25 @@ class StudySessionServiceTest {
                 () -> service.deleteSession(1L)
         );
 
-        verify(repository, never()).delete(any());
-        verify(repository, never()).flush();
+        verify(repository, never())
+                .delete(any());
+
+        verify(repository, never())
+                .flush();
     }
 
     @Test
     void deleteSession_shouldThrowConflictException_whenDeleteViolatesConstraint() {
 
         User user = mock(User.class);
-        StudySession session = mock(StudySession.class);
-        var topic = mock(io.github.wlailson.study_api.model.Topic.class);
-        var subject = mock(io.github.wlailson.study_api.model.Subject.class);
+        StudySession session =
+                mock(StudySession.class);
+
+        var topic =
+                mock(io.github.wlailson.study_api.model.Topic.class);
+
+        var subject =
+                mock(io.github.wlailson.study_api.model.Subject.class);
 
         when(user.getId()).thenReturn(1L);
         when(user.getName()).thenReturn("Maria");
@@ -374,43 +488,66 @@ class StudySessionServiceTest {
         when(session.getTopic()).thenReturn(topic);
         when(session.getSubject()).thenReturn(subject);
 
-        when(topic.getName()).thenReturn("Spring Boot");
-        when(subject.getName()).thenReturn("Java");
+        when(topic.getName())
+                .thenReturn("Spring Boot");
 
-        when(authService.getCurrentUser()).thenReturn(user);
+        when(subject.getName())
+                .thenReturn("Java");
+
+        when(authService.getCurrentUser())
+                .thenReturn(user);
 
         when(repository.findByIdAndUserId(1L, 1L))
                 .thenReturn(Optional.of(session));
 
-        doThrow(new DataIntegrityViolationException("FK violation"))
-                .when(repository)
-                .flush();
+        doThrow(
+                new DataIntegrityViolationException(
+                        "FK violation"
+                )
+        ).when(repository).flush();
 
         assertThrows(
                 ConflictException.class,
                 () -> service.deleteSession(1L)
         );
 
-        verify(repository).delete(session);
-        verify(repository).flush();
+        verify(repository)
+                .delete(session);
+
+        verify(repository)
+                .flush();
     }
 
     @Test
     void findAllTopics_shouldReturnTopics() {
 
-        List<TopicMinProjection> topics =
-                List.of(mock(TopicMinProjection.class));
+        TopicMinProjection projection =
+                mock(TopicMinProjection.class);
+
+        when(projection.getId())
+                .thenReturn(1L);
+
+        when(projection.getName())
+                .thenReturn("Spring Boot");
 
         when(topicService.getAllTopics())
-                .thenReturn(topics);
+                .thenReturn(List.of(projection));
 
-        List<TopicMinProjection> response =
+        List<TopicMinDTO> response =
                 service.findAllTopics();
 
         assertNotNull(response);
         assertEquals(1, response.size());
-        assertSame(topics, response);
 
-        verify(topicService).getAllTopics();
+        TopicMinDTO dto = response.get(0);
+
+        assertEquals(1L, dto.id());
+        assertEquals(
+                "Spring Boot",
+                dto.name()
+        );
+
+        verify(topicService)
+                .getAllTopics();
     }
 }

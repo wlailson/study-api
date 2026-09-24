@@ -1,5 +1,6 @@
 package io.github.wlailson.study_api.service;
 
+import io.github.wlailson.study_api.dto.RevisionMinDTO;
 import io.github.wlailson.study_api.dto.RevisionRequestDTO;
 import io.github.wlailson.study_api.dto.RevisionResponseDTO;
 import io.github.wlailson.study_api.dto.StudySessionRequestDTO;
@@ -21,6 +22,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -59,33 +61,40 @@ class RevisionServiceTest {
         revision.setUser(user);
         revision.setSession(session);
         revision.setStatus(RevisionStatus.PENDING);
-        revision.setScheduledDate(LocalDate.of(2026, 9, 15));
+        revision.setScheduledDate(
+                LocalDate.of(2026, 9, 15)
+        );
     }
-
-    // ---------------------------------------------------------
-    // findById
-    // ---------------------------------------------------------
 
     @Test
     void findById_shouldReturnRevision_whenRevisionExists() {
 
-        when(authService.getCurrentUser()).thenReturn(user);
+        when(authService.getCurrentUser())
+                .thenReturn(user);
+
         when(repository.findByIdAndUser_Id(10L, 1L))
                 .thenReturn(Optional.of(revision));
 
-        RevisionResponseDTO result = service.findById(10L);
+        RevisionResponseDTO result =
+                service.findById(10L);
 
         assertNotNull(result);
         assertEquals(10L, result.id());
-        assertEquals(RevisionStatus.PENDING, result.status());
+        assertEquals(
+                RevisionStatus.PENDING,
+                result.status()
+        );
 
-        verify(repository).findByIdAndUser_Id(10L, 1L);
+        verify(repository)
+                .findByIdAndUser_Id(10L, 1L);
     }
 
     @Test
     void findById_shouldThrowException_whenRevisionDoesNotExist() {
 
-        when(authService.getCurrentUser()).thenReturn(user);
+        when(authService.getCurrentUser())
+                .thenReturn(user);
+
         when(repository.findByIdAndUser_Id(10L, 1L))
                 .thenReturn(Optional.empty());
 
@@ -94,53 +103,109 @@ class RevisionServiceTest {
                 () -> service.findById(10L)
         );
 
-        verify(repository).findByIdAndUser_Id(10L, 1L);
+        verify(repository)
+                .findByIdAndUser_Id(10L, 1L);
     }
-
-    // ---------------------------------------------------------
-    // findAll
-    // ---------------------------------------------------------
 
     @Test
     void findAll_shouldReturnAllUserRevisions_whenStatusIsNull() {
 
-        RevisionMinProjection projection = mock(RevisionMinProjection.class);
+        when(authService.getCurrentUser())
+                .thenReturn(user);
 
-        when(authService.getCurrentUser()).thenReturn(user);
+        RevisionMinProjection projection =
+                mock(RevisionMinProjection.class);
+
+        when(projection.getId())
+                .thenReturn(10L);
+
+        when(projection.getStatus())
+                .thenReturn(RevisionStatus.PENDING);
+
+        when(projection.getScheduledDate())
+                .thenReturn(
+                        LocalDate.of(2026, 9, 15)
+                );
+
         when(repository.searchByUserId(1L))
                 .thenReturn(List.of(projection));
 
-        List<RevisionMinProjection> result = service.findAll(null);
+        List<RevisionMinDTO> result =
+                service.findAll(null);
 
         assertNotNull(result);
         assertEquals(1, result.size());
-        assertEquals(projection, result.get(0));
 
-        verify(repository).searchByUserId(1L);
+        RevisionMinDTO dto = result.get(0);
+
+        assertEquals(10L, dto.id());
+        assertEquals(
+                RevisionStatus.PENDING,
+                dto.status()
+        );
+        assertEquals(
+                LocalDate.of(2026, 9, 15),
+                dto.scheduledDate()
+        );
+
+        verify(repository)
+                .searchByUserId(1L);
+
         verify(repository, never())
-                .searchByUserIdAndStatus(anyLong(), any());
+                .searchByUserIdAndStatus(
+                        anyLong(),
+                        any()
+                );
     }
 
     @Test
     void findAll_shouldReturnFilteredRevisions_whenStatusIsProvided() {
 
-        RevisionMinProjection projection = mock(RevisionMinProjection.class);
+        when(authService.getCurrentUser())
+                .thenReturn(user);
 
-        when(authService.getCurrentUser()).thenReturn(user);
+        RevisionMinProjection projection =
+                mock(RevisionMinProjection.class);
+
+        when(projection.getId())
+                .thenReturn(10L);
+
+        when(projection.getStatus())
+                .thenReturn(RevisionStatus.PENDING);
+
+        when(projection.getScheduledDate())
+                .thenReturn(
+                        LocalDate.of(2026, 9, 15)
+                );
+
         when(repository.searchByUserIdAndStatus(
                 1L,
                 RevisionStatus.PENDING
         )).thenReturn(List.of(projection));
 
-        List<RevisionMinProjection> result =
+        List<RevisionMinDTO> result =
                 service.findAll(RevisionStatus.PENDING);
 
         assertNotNull(result);
         assertEquals(1, result.size());
-        assertEquals(projection, result.get(0));
+
+        RevisionMinDTO dto = result.get(0);
+
+        assertEquals(10L, dto.id());
+        assertEquals(
+                RevisionStatus.PENDING,
+                dto.status()
+        );
+        assertEquals(
+                LocalDate.of(2026, 9, 15),
+                dto.scheduledDate()
+        );
 
         verify(repository)
-                .searchByUserIdAndStatus(1L, RevisionStatus.PENDING);
+                .searchByUserIdAndStatus(
+                        1L,
+                        RevisionStatus.PENDING
+                );
 
         verify(repository, never())
                 .searchByUserId(anyLong());
@@ -149,62 +214,82 @@ class RevisionServiceTest {
     @Test
     void findAll_shouldReturnEmptyList_whenUserHasNoRevisions() {
 
-        when(authService.getCurrentUser()).thenReturn(user);
+        when(authService.getCurrentUser())
+                .thenReturn(user);
+
         when(repository.searchByUserId(1L))
                 .thenReturn(List.of());
 
-        List<RevisionMinProjection> result = service.findAll(null);
+        List<RevisionMinDTO> result =
+                service.findAll(null);
 
         assertNotNull(result);
         assertTrue(result.isEmpty());
 
-        verify(repository).searchByUserId(1L);
+        verify(repository)
+                .searchByUserId(1L);
     }
-
-    // ---------------------------------------------------------
-    // conclude
-    // ---------------------------------------------------------
 
     @Test
     void conclude_shouldCompleteRevision() {
 
-        when(authService.getCurrentUser()).thenReturn(user);
+        when(authService.getCurrentUser())
+                .thenReturn(user);
+
         when(repository.findByIdAndUser_IdAndStatus(
                 10L,
                 1L,
                 RevisionStatus.PENDING
         )).thenReturn(Optional.of(revision));
 
-        RevisionRequestDTO request = new RevisionRequestDTO(
-                LocalDate.of(2026, 9, 20),
-                10L,
-                60L
-        );
+        RevisionRequestDTO request =
+                new RevisionRequestDTO(
+                        LocalDate.of(2026, 9, 20),
+                        10L,
+                        60L
+                );
 
-        RevisionResponseDTO result = service.conclude(10L, request);
+        RevisionResponseDTO result =
+                service.conclude(10L, request);
 
         assertNotNull(result);
 
-        assertEquals(RevisionStatus.COMPLETED, revision.getStatus());
-        assertEquals(60L, revision.getDurationInMinutes());
-        assertEquals(10L, revision.getBreakTimeInMinutes());
-        assertEquals(LocalDate.now(), revision.getCompletedDate());
-
-        verify(repository).findByIdAndUser_IdAndStatus(
-                10L,
-                1L,
-                RevisionStatus.PENDING
+        assertEquals(
+                RevisionStatus.COMPLETED,
+                revision.getStatus()
         );
 
-        // Não precisa chamar save(), pois a entidade está gerenciada
-        // dentro da transação.
-        verify(repository, never()).save(any());
+        assertEquals(
+                60L,
+                revision.getDurationInMinutes()
+        );
+
+        assertEquals(
+                10L,
+                revision.getBreakTimeInMinutes()
+        );
+
+        assertEquals(
+                LocalDate.now(),
+                revision.getCompletedDate()
+        );
+
+        verify(repository)
+                .findByIdAndUser_IdAndStatus(
+                        10L,
+                        1L,
+                        RevisionStatus.PENDING
+                );
+
+        verify(repository, never())
+                .save(any());
     }
 
     @Test
     void conclude_shouldThrowException_whenRevisionDoesNotExistOrIsAlreadyCompleted() {
 
-        when(authService.getCurrentUser()).thenReturn(user);
+        when(authService.getCurrentUser())
+                .thenReturn(user);
 
         when(repository.findByIdAndUser_IdAndStatus(
                 10L,
@@ -212,45 +297,50 @@ class RevisionServiceTest {
                 RevisionStatus.PENDING
         )).thenReturn(Optional.empty());
 
-        RevisionRequestDTO request = new RevisionRequestDTO(
-                LocalDate.of(2026, 9, 20),
-                10L,
-                60L
-        );
+        RevisionRequestDTO request =
+                new RevisionRequestDTO(
+                        LocalDate.of(2026, 9, 20),
+                        10L,
+                        60L
+                );
 
         assertThrows(
                 ResourceNotFoundException.class,
                 () -> service.conclude(10L, request)
         );
 
-        verify(repository).findByIdAndUser_IdAndStatus(
-                10L,
-                1L,
-                RevisionStatus.PENDING
-        );
+        verify(repository)
+                .findByIdAndUser_IdAndStatus(
+                        10L,
+                        1L,
+                        RevisionStatus.PENDING
+                );
     }
-
-    // ---------------------------------------------------------
-    // delete
-    // ---------------------------------------------------------
 
     @Test
     void delete_shouldDeleteRevision_whenRevisionExists() {
 
-        when(authService.getCurrentUser()).thenReturn(user);
+        when(authService.getCurrentUser())
+                .thenReturn(user);
+
         when(repository.findByIdAndUser_Id(10L, 1L))
                 .thenReturn(Optional.of(revision));
 
         service.delete(10L);
 
-        verify(repository).findByIdAndUser_Id(10L, 1L);
-        verify(repository).delete(revision);
+        verify(repository)
+                .findByIdAndUser_Id(10L, 1L);
+
+        verify(repository)
+                .delete(revision);
     }
 
     @Test
     void delete_shouldThrowException_whenRevisionDoesNotExist() {
 
-        when(authService.getCurrentUser()).thenReturn(user);
+        when(authService.getCurrentUser())
+                .thenReturn(user);
+
         when(repository.findByIdAndUser_Id(10L, 1L))
                 .thenReturn(Optional.empty());
 
@@ -259,50 +349,62 @@ class RevisionServiceTest {
                 () -> service.delete(10L)
         );
 
-        verify(repository, never()).delete(any());
+        verify(repository, never())
+                .delete(any());
     }
-
-    // ---------------------------------------------------------
-    // saveRevisions
-    // ---------------------------------------------------------
 
     @Test
     void saveRevisions_shouldCreateAndSaveRevisions() {
 
-        StudySession session = new StudySession();
+        StudySession session =
+                new StudySession();
 
-        RevisionRequestDTO revisionRequest1 = new RevisionRequestDTO(
-                LocalDate.of(2026, 9, 15),
-                null,
-                null
-        );
+        RevisionRequestDTO revisionRequest1 =
+                new RevisionRequestDTO(
+                        LocalDate.of(2026, 9, 15),
+                        null,
+                        null
+                );
 
-        RevisionRequestDTO revisionRequest2 = new RevisionRequestDTO(
-                LocalDate.of(2026, 9, 20),
-                null,
-                null
-        );
+        RevisionRequestDTO revisionRequest2 =
+                new RevisionRequestDTO(
+                        LocalDate.of(2026, 9, 20),
+                        null,
+                        null
+                );
 
-        StudySessionRequestDTO request = mock(StudySessionRequestDTO.class);
+        StudySessionRequestDTO request =
+                mock(StudySessionRequestDTO.class);
 
-        when(authService.getCurrentUser()).thenReturn(user);
+        when(authService.getCurrentUser())
+                .thenReturn(user);
 
         when(request.revisions())
-                .thenReturn(List.of(
-                        revisionRequest1,
-                        revisionRequest2
-                ));
+                .thenReturn(
+                        List.of(
+                                revisionRequest1,
+                                revisionRequest2
+                        )
+                );
 
-        service.saveRevisions(request, session);
+        service.saveRevisions(
+                request,
+                session
+        );
 
         ArgumentCaptor<List<Revision>> captor =
                 ArgumentCaptor.forClass(List.class);
 
-        verify(repository).saveAll(captor.capture());
+        verify(repository)
+                .saveAll(captor.capture());
 
-        List<Revision> savedRevisions = captor.getValue();
+        List<Revision> savedRevisions =
+                captor.getValue();
 
-        assertEquals(2, savedRevisions.size());
+        assertEquals(
+                2,
+                savedRevisions.size()
+        );
 
         assertEquals(
                 RevisionStatus.PENDING,
@@ -324,30 +426,62 @@ class RevisionServiceTest {
                 savedRevisions.get(1).getScheduledDate()
         );
 
-        assertEquals(user, savedRevisions.get(0).getUser());
-        assertEquals(user, savedRevisions.get(1).getUser());
+        assertEquals(
+                user,
+                savedRevisions.get(0).getUser()
+        );
 
-        assertEquals(session, savedRevisions.get(0).getSession());
-        assertEquals(session, savedRevisions.get(1).getSession());
+        assertEquals(
+                user,
+                savedRevisions.get(1).getUser()
+        );
 
-        assertEquals(2, session.getRevisions().size());
-        assertTrue(session.getRevisions().containsAll(savedRevisions));
+        assertEquals(
+                session,
+                savedRevisions.get(0).getSession()
+        );
+
+        assertEquals(
+                session,
+                savedRevisions.get(1).getSession()
+        );
+
+        assertEquals(
+                2,
+                session.getRevisions().size()
+        );
+
+        assertTrue(
+                session.getRevisions()
+                        .containsAll(savedRevisions)
+        );
     }
 
     @Test
     void saveRevisions_shouldNotSaveAnything_whenRevisionListIsEmpty() {
 
-        StudySession session = new StudySession();
+        StudySession session =
+                new StudySession();
 
-        StudySessionRequestDTO request = mock(StudySessionRequestDTO.class);
+        StudySessionRequestDTO request =
+                mock(StudySessionRequestDTO.class);
 
-        when(authService.getCurrentUser()).thenReturn(user);
-        when(request.revisions()).thenReturn(List.of());
+        when(authService.getCurrentUser())
+                .thenReturn(user);
 
-        service.saveRevisions(request, session);
+        when(request.revisions())
+                .thenReturn(List.of());
 
-        verify(repository).saveAll(List.of());
+        service.saveRevisions(
+                request,
+                session
+        );
 
-        assertTrue(session.getRevisions().isEmpty());
+        verify(repository)
+                .saveAll(List.of());
+
+        assertTrue(
+                session.getRevisions().isEmpty()
+        );
     }
 }

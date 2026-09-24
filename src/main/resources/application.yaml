@@ -32,4 +32,4 @@ cors:
   origins: ${CORS_ORIGINS:http://localhost:3000,http://localhost:5173}
 
 server:
-  port: ${PORT:8080}
+  port: ${PORT:8081}

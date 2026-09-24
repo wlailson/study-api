@@ -1,13 +1,19 @@
 package io.github.wlailson.study_api.controller;
 
+
+import io.github.wlailson.study_api.dto.RevisionMinDTO;
 import io.github.wlailson.study_api.dto.RevisionResponseDTO;
 import io.github.wlailson.study_api.model.RevisionStatus;
-import io.github.wlailson.study_api.projections.RevisionMinProjection;
+import io.github.wlailson.study_api.security.JwtUtil;
+import io.github.wlailson.study_api.security.SecurityConfig;
 import io.github.wlailson.study_api.service.RevisionService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.cache.CacheManager;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -29,6 +35,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(RevisionController.class)
+@Import(SecurityConfig.class)
 class RevisionControllerTest {
 
     @Autowired
@@ -36,6 +43,15 @@ class RevisionControllerTest {
 
     @MockitoBean
     private RevisionService service;
+
+    @MockitoBean
+    private CacheManager cacheManager;
+
+    @MockitoBean
+    private JwtUtil jwtUtil;
+
+    @MockitoBean
+    private UserDetailsService userDetailsService;
 
     @Test
     @WithMockUser(roles = "CLIENT")
@@ -61,10 +77,8 @@ class RevisionControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.topic").value("Java"))
-                .andExpect(jsonPath("$.scheduledDate")
-                        .value("2026-09-15"))
-                .andExpect(jsonPath("$.status")
-                        .value("PENDING"));
+                .andExpect(jsonPath("$.scheduledDate").value("2026-09-15"))
+                .andExpect(jsonPath("$.status").value("PENDING"));
 
         verify(service).findById(1L);
     }
@@ -73,15 +87,15 @@ class RevisionControllerTest {
     @WithMockUser(roles = "CLIENT")
     void findAll_shouldReturnAllRevisions() throws Exception {
 
-        RevisionMinProjection revision1 =
-                new RevisionProjection(
+        RevisionMinDTO revision1 =
+                new RevisionMinDTO(
                         1L,
                         RevisionStatus.PENDING,
                         LocalDate.of(2026, 9, 15)
                 );
 
-        RevisionMinProjection revision2 =
-                new RevisionProjection(
+        RevisionMinDTO revision2 =
+                new RevisionMinDTO(
                         2L,
                         RevisionStatus.COMPLETED,
                         LocalDate.of(2026, 9, 16)
@@ -96,15 +110,11 @@ class RevisionControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(2))
                 .andExpect(jsonPath("$[0].id").value(1))
-                .andExpect(jsonPath("$[0].status")
-                        .value("PENDING"))
-                .andExpect(jsonPath("$[0].scheduledDate")
-                        .value("2026-09-15"))
+                .andExpect(jsonPath("$[0].status").value("PENDING"))
+                .andExpect(jsonPath("$[0].scheduledDate").value("2026-09-15"))
                 .andExpect(jsonPath("$[1].id").value(2))
-                .andExpect(jsonPath("$[1].status")
-                        .value("COMPLETED"))
-                .andExpect(jsonPath("$[1].scheduledDate")
-                        .value("2026-09-16"));
+                .andExpect(jsonPath("$[1].status").value("COMPLETED"))
+                .andExpect(jsonPath("$[1].scheduledDate").value("2026-09-16"));
 
         verify(service).findAll(null);
     }
@@ -113,8 +123,8 @@ class RevisionControllerTest {
     @WithMockUser(roles = "CLIENT")
     void findAll_shouldFilterByStatus() throws Exception {
 
-        RevisionMinProjection revision =
-                new RevisionProjection(
+        RevisionMinDTO revision =
+                new RevisionMinDTO(
                         1L,
                         RevisionStatus.PENDING,
                         LocalDate.of(2026, 9, 15)
@@ -130,10 +140,8 @@ class RevisionControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].id").value(1))
-                .andExpect(jsonPath("$[0].status")
-                        .value("PENDING"))
-                .andExpect(jsonPath("$[0].scheduledDate")
-                        .value("2026-09-15"));
+                .andExpect(jsonPath("$[0].status").value("PENDING"))
+                .andExpect(jsonPath("$[0].scheduledDate").value("2026-09-15"));
 
         verify(service).findAll(RevisionStatus.PENDING);
     }
@@ -187,16 +195,11 @@ class RevisionControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.topic").value("Java"))
-                .andExpect(jsonPath("$.scheduledDate")
-                        .value("2026-09-15"))
-                .andExpect(jsonPath("$.completedDate")
-                        .value("2026-09-15"))
-                .andExpect(jsonPath("$.durationInMinutes")
-                        .value(60))
-                .andExpect(jsonPath("$.breakTimeInMinutes")
-                        .value(10))
-                .andExpect(jsonPath("$.status")
-                        .value("COMPLETED"));
+                .andExpect(jsonPath("$.scheduledDate").value("2026-09-15"))
+                .andExpect(jsonPath("$.completedDate").value("2026-09-15"))
+                .andExpect(jsonPath("$.durationInMinutes").value(60))
+                .andExpect(jsonPath("$.breakTimeInMinutes").value(10))
+                .andExpect(jsonPath("$.status").value("COMPLETED"));
 
         verify(service).conclude(eq(1L), any());
     }
@@ -214,26 +217,5 @@ class RevisionControllerTest {
                 .andExpect(status().isNoContent());
 
         verify(service).delete(1L);
-    }
-
-    private record RevisionProjection(
-            Long id,
-            RevisionStatus status,
-            LocalDate scheduledDate
-    ) implements RevisionMinProjection {
-        @Override
-        public Long getId() {
-            return 0L;
-        }
-
-        @Override
-        public RevisionStatus getStatus() {
-            return null;
-        }
-
-        @Override
-        public LocalDate getScheduledDate() {
-            return null;
-        }
     }
 }
